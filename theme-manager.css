@@ -1,0 +1,302 @@
+:root {
+  --focus: #0ea5e9;
+  --link-border: #bfdbfe;
+  --link-bg: #eff6ff;
+  --link-ink: #1e3a8a;
+  --btn-primary: #2563eb;
+  --btn-primary-hover: #1d4ed8;
+  --btn-alt: #0ea5e9;
+  --btn-alt-hover: #0284c7;
+  --btn-neutral: #64748b;
+  --btn-neutral-hover: #475569;
+  --btn-compare: #0f766e;
+  --btn-compare-hover: #115e59;
+}
+
+body[data-theme="sky"] {
+  --bg-a: #f6fbff;
+  --bg-b: #fff7ef;
+  --panel: #ffffff;
+  --ink: #1f2b3d;
+  --muted: #5f6e84;
+  --line: #d9e3ef;
+  --shadow: 0 16px 42px rgba(31, 43, 61, 0.11);
+  --focus: #0ea5e9;
+  --link-border: #bfdbfe;
+  --link-bg: #eff6ff;
+  --link-ink: #1e3a8a;
+  --btn-primary: #2563eb;
+  --btn-primary-hover: #1d4ed8;
+  --btn-alt: #0ea5e9;
+  --btn-alt-hover: #0284c7;
+  --btn-neutral: #64748b;
+  --btn-neutral-hover: #475569;
+  --btn-compare: #0f766e;
+  --btn-compare-hover: #115e59;
+}
+
+body[data-theme="sunset"] {
+  --bg-a: #fff7ed;
+  --bg-b: #fffbeb;
+  --panel: #fffdf9;
+  --ink: #3f2a1f;
+  --muted: #7b5f4d;
+  --line: #ecd8c5;
+  --shadow: 0 16px 42px rgba(122, 69, 20, 0.16);
+  --focus: #ea580c;
+  --link-border: #fdba74;
+  --link-bg: #ffedd5;
+  --link-ink: #9a3412;
+  --btn-primary: #ea580c;
+  --btn-primary-hover: #c2410c;
+  --btn-alt: #f59e0b;
+  --btn-alt-hover: #d97706;
+  --btn-neutral: #7c6f64;
+  --btn-neutral-hover: #5b5149;
+  --btn-compare: #c2410c;
+  --btn-compare-hover: #9a3412;
+}
+
+body[data-theme="forest"] {
+  --bg-a: #f3fbf6;
+  --bg-b: #eefaf7;
+  --panel: #fbfefc;
+  --ink: #173027;
+  --muted: #4d6f64;
+  --line: #cfe5d8;
+  --shadow: 0 16px 42px rgba(22, 84, 62, 0.14);
+  --focus: #059669;
+  --link-border: #86efac;
+  --link-bg: #dcfce7;
+  --link-ink: #166534;
+  --btn-primary: #0f766e;
+  --btn-primary-hover: #115e59;
+  --btn-alt: #059669;
+  --btn-alt-hover: #047857;
+  --btn-neutral: #4b6b5f;
+  --btn-neutral-hover: #345145;
+  --btn-compare: #047857;
+  --btn-compare-hover: #065f46;
+}
+
+body[data-theme="midnight"] {
+  --bg-a: #eef2ff;
+  --bg-b: #f8fafc;
+  --panel: #fdfdff;
+  --ink: #182235;
+  --muted: #52627c;
+  --line: #cfdaeb;
+  --shadow: 0 16px 42px rgba(30, 41, 59, 0.14);
+  --focus: #2563eb;
+  --link-border: #93c5fd;
+  --link-bg: #dbeafe;
+  --link-ink: #1d4ed8;
+  --btn-primary: #334155;
+  --btn-primary-hover: #1e293b;
+  --btn-alt: #2563eb;
+  --btn-alt-hover: #1d4ed8;
+  --btn-neutral: #475569;
+  --btn-neutral-hover: #334155;
+  --btn-compare: #1d4ed8;
+  --btn-compare-hover: #1e40af;
+}
+
+body[data-theme] {
+  color: var(--ink);
+}
+
+body[data-theme] .home-link {
+  border-color: var(--link-border);
+  background: var(--link-bg);
+  color: var(--link-ink);
+}
+
+body[data-theme] button.primary,
+body[data-theme] a.button {
+  background: var(--btn-primary);
+  color: #fff;
+}
+
+body[data-theme] button.primary:hover,
+body[data-theme] a.button:hover {
+  background: var(--btn-primary-hover);
+  filter: none;
+}
+
+body[data-theme] button.alt {
+  background: var(--btn-alt);
+  color: #fff;
+}
+
+body[data-theme] button.alt:hover {
+  background: var(--btn-alt-hover);
+  filter: none;
+}
+
+body[data-theme] button.neutral {
+  background: var(--btn-neutral);
+  color: #fff;
+}
+
+body[data-theme] button.neutral:hover {
+  background: var(--btn-neutral-hover);
+  filter: none;
+}
+
+body[data-theme] a.button.compare {
+  background: var(--btn-compare);
+}
+
+body[data-theme] a.button.compare:hover {
+  background: var(--btn-compare-hover);
+}
+
+body[data-theme] button:focus-visible,
+body[data-theme] a:focus-visible,
+body[data-theme] input:focus-visible,
+body[data-theme] select:focus-visible {
+  outline-color: var(--focus);
+}
+
+.theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 94%, white 6%);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.theme-switcher .theme-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.theme-switcher .theme-select {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+  padding: 6px 11px;
+}
+
+.hero-actions.theme-only {
+  margin-top: 12px;
+}
+
+.page > * {
+  animation: page-in 460ms cubic-bezier(0.2, 0.8, 0.24, 1) both;
+}
+
+.page > *:nth-child(2) { animation-delay: 50ms; }
+.page > *:nth-child(3) { animation-delay: 90ms; }
+.page > *:nth-child(4) { animation-delay: 130ms; }
+
+.grid .card {
+  animation: page-in 460ms cubic-bezier(0.2, 0.8, 0.24, 1) both;
+}
+
+.grid .card:nth-child(2) { animation-delay: 60ms; }
+.grid .card:nth-child(3) { animation-delay: 100ms; }
+.grid .card:nth-child(4) { animation-delay: 140ms; }
+
+body.theme-switching .hero,
+body.theme-switching .controls,
+body.theme-switching .visual,
+body.theme-switching .how,
+body.theme-switching .sim,
+body.theme-switching .global-note,
+body.theme-switching .card,
+body.theme-switching .table {
+  animation: theme-swap 340ms ease both;
+}
+
+.layout.switch-layout {
+  animation: layout-switch 300ms ease both;
+}
+
+.code-panel.switching,
+.code-mini.switching {
+  animation: panel-switch 280ms ease both;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes theme-swap {
+  0% {
+    opacity: 0.82;
+    transform: translateY(8px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes panel-switch {
+  0% {
+    opacity: 0.76;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes layout-switch {
+  0% {
+    opacity: 0.88;
+    transform: scale(0.996);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 700px) {
+  .theme-switcher {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .theme-switcher .theme-select {
+    width: min(52vw, 220px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page > *,
+  .grid .card,
+  body.theme-switching .hero,
+  body.theme-switching .controls,
+  body.theme-switching .visual,
+  body.theme-switching .how,
+  body.theme-switching .sim,
+  body.theme-switching .global-note,
+  body.theme-switching .card,
+  body.theme-switching .table,
+  .layout.switch-layout,
+  .code-panel.switching,
+  .code-mini.switching {
+    animation: none !important;
+  }
+}
