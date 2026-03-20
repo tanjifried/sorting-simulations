@@ -14,6 +14,9 @@
   let ui = {};
   let tilingState = { ...DEFAULT_TILING };
   let originalBodyPadding = "";
+  let tilingBeforeFullscreen = null;
+  let codePanelOriginalParent = null;
+  let codePanelOriginalNextSibling = null;
 
   function init() {
     detectUI();
@@ -41,6 +44,11 @@
       explainText: document.getElementById("explainText"),
       howPanel: document.querySelector(".how")
     };
+
+    if (ui.codePanel && !codePanelOriginalParent) {
+      codePanelOriginalParent = ui.codePanel.parentElement;
+      codePanelOriginalNextSibling = ui.codePanel.nextElementSibling;
+    }
   }
 
   function injectFullscreenButton() {
@@ -188,6 +196,13 @@
   function enterFullscreen() {
     originalBodyPadding = ui.body.style.padding || "";
     ui.body.classList.add("is-fullscreen");
+
+    if (!tilingBeforeFullscreen) {
+      tilingBeforeFullscreen = { ...tilingState };
+    }
+
+    setSwapCodePreset();
+    moveCodePanelToVisual();
     
     if (ui.page.requestFullscreen) {
       ui.page.requestFullscreen().catch(err => {
@@ -207,6 +222,15 @@
   function exitFullscreen() {
     ui.body.classList.remove("is-fullscreen");
     ui.body.style.padding = originalBodyPadding;
+    restoreCodePanelPlacement();
+
+    if (tilingBeforeFullscreen) {
+      tilingState = { ...tilingBeforeFullscreen };
+      tilingBeforeFullscreen = null;
+      saveTilingPreferences();
+      syncTilingCheckboxes();
+      applyTiling();
+    }
     
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(err => {
@@ -220,7 +244,26 @@
     }
   }
 
+  function moveCodePanelToVisual() {
+    if (!ui.codePanel || !ui.visual) return;
+    if (ui.codePanel.parentElement === ui.visual) return;
+    ui.visual.appendChild(ui.codePanel);
+  }
+
+  function restoreCodePanelPlacement() {
+    if (!ui.codePanel || !codePanelOriginalParent) return;
+    if (ui.codePanel.parentElement === codePanelOriginalParent) return;
+
+    if (codePanelOriginalNextSibling && codePanelOriginalNextSibling.parentElement === codePanelOriginalParent) {
+      codePanelOriginalParent.insertBefore(ui.codePanel, codePanelOriginalNextSibling);
+    } else {
+      codePanelOriginalParent.appendChild(ui.codePanel);
+    }
+  }
+
   function applyTiling() {
+    const isFullscreen = ui.body.classList.contains("is-fullscreen");
+
     if (ui.controls) {
       ui.controls.classList.toggle("panel-hidden", !tilingState.controls);
       ui.controls.classList.toggle("panel-visible", tilingState.controls);
@@ -254,7 +297,7 @@
     }
 
     if (ui.sidebarRight) {
-      const rightVisible = tilingState.codeTrace || tilingState.explanation;
+      const rightVisible = isFullscreen ? tilingState.explanation : tilingState.codeTrace || tilingState.explanation;
       ui.sidebarRight.style.display = rightVisible ? "" : "none";
     }
 
@@ -333,11 +376,20 @@
     document.addEventListener("fullscreenchange", () => {
       if (!document.fullscreenElement) {
         ui.body.classList.remove("is-fullscreen");
+        restoreCodePanelPlacement();
         if (ui.layout) {
           ui.layout.style.gridTemplateColumns = "";
         }
         if (ui.tilingManager) {
           ui.tilingManager.style.display = "none";
+        }
+
+        if (tilingBeforeFullscreen) {
+          tilingState = { ...tilingBeforeFullscreen };
+          tilingBeforeFullscreen = null;
+          saveTilingPreferences();
+          syncTilingCheckboxes();
+          applyTiling();
         }
       }
     });
