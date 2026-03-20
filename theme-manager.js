@@ -67,6 +67,9 @@
   }
 
   function resolveThemeMount() {
+    const navTheme = document.querySelector(".nav-theme");
+    if (navTheme) return navTheme;
+
     const heroActions = document.querySelector(".hero-actions");
     if (heroActions) return heroActions;
 
