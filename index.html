@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme-manager.css">
   <style>
     :root {
       --bg-a: #f6fbff;
@@ -83,6 +84,11 @@
       box-shadow: 0 20px 48px rgba(31, 43, 61, 0.15);
     }
 
+    .card:focus-within {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 48px rgba(31, 43, 61, 0.15);
+    }
+
     .card h2 {
       margin: 0;
       font-size: 1.05rem;
@@ -110,11 +116,14 @@
     }
 
     a.button {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       text-decoration: none;
       font-weight: 800;
       border-radius: 10px;
       padding: 10px 12px;
+      min-height: 44px;
       color: white;
       background: #2563eb;
       text-align: center;
@@ -129,6 +138,12 @@
 
     a.button:active {
       transform: translateY(1px);
+    }
+
+    a:focus-visible,
+    a.button:focus-visible {
+      outline: 3px solid #0ea5e9;
+      outline-offset: 3px;
     }
 
     a.button.compare {
@@ -176,9 +191,18 @@
       .hero,
       .card { padding: 12px; }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
   </style>
 </head>
-<body>
+<body data-theme="sky">
   <main class="page">
     <section class="hero">
       <h1>Sorting Algorithms - Visual Simulations</h1>
@@ -252,5 +276,6 @@
       </table>
     </section>
   </main>
+  <script src="theme-manager.js"></script>
 </body>
 </html>

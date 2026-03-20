@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme-manager.css">
+  <link rel="stylesheet" href="visualization-enhancements.css">
   <style>
     :root {
       --bg-a: #f3f9ff;
@@ -78,6 +80,9 @@
     }
 
     .home-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       text-decoration: none;
       font-weight: 800;
       border-radius: 999px;
@@ -85,6 +90,7 @@
       padding: 8px 12px;
       color: #1e3a8a;
       background: #eff6ff;
+      min-height: 44px;
     }
 
     .hero p {
@@ -105,10 +111,18 @@
       gap: 8px;
     }
 
+    .control-grid.secondary {
+      margin-top: 10px;
+    }
+
     .control-row {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 8px;
+    }
+
+    .custom-input-wrap {
+      grid-column: span 4;
     }
 
     .buttons {
@@ -131,6 +145,14 @@
       margin-bottom: 4px;
     }
 
+    .field-error {
+      margin: 4px 0 0;
+      min-height: 18px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #b42318;
+    }
+
     input,
     select,
     button {
@@ -145,9 +167,13 @@
       border: 1px solid var(--line);
       border-radius: 9px;
       background: #fff;
+      min-height: 44px;
     }
 
-    input[type="range"] { padding: 6px; }
+    input[type="range"] {
+      padding: 6px;
+      min-height: 34px;
+    }
 
     button {
       padding: 9px 10px;
@@ -155,6 +181,7 @@
       border-radius: 9px;
       font-weight: 800;
       cursor: pointer;
+      min-height: 44px;
       transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
       background: #e2e8f0;
       color: #0f172a;
@@ -173,6 +200,14 @@
     button.warn { background: #f59e0b; color: #2f1600; }
     button.alt { background: #0ea5e9; color: #fff; }
     button.neutral { background: #64748b; color: #fff; }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid #0ea5e9;
+      outline-offset: 2px;
+    }
 
     .quick {
       font-size: 0.83rem;
@@ -301,7 +336,7 @@
     }
 
     .value {
-      font-size: 0.85rem;
+      font-size: clamp(0.72rem, 1.15vw, 0.88rem);
       font-weight: 800;
       color: #1e293b;
       line-height: 1;
@@ -361,6 +396,7 @@
       transition: background-color 0.2s ease, border-color 0.2s ease;
       display: flex;
       align-items: center;
+      overflow-wrap: anywhere;
     }
 
     .status.state-compare { background: #fefce8; border-color: #fde047; }
@@ -389,6 +425,44 @@
       max-height: 152px;
       overflow: auto;
       background: #0f172a;
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
+    }
+
+    .code-mini-line {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 8px;
+      padding: 5px 10px;
+      font-size: 0.72rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+      border-left: 3px solid transparent;
+      transition: background-color 0.18s ease, border-color 0.18s ease;
+      white-space: pre;
+    }
+
+    .code-mini-line .ln {
+      color: #64748b;
+      text-align: right;
+      user-select: none;
+      font-size: 0.68rem;
+      line-height: 1.5;
+    }
+
+    .code-mini-line .code-text {
+      display: block;
+      tab-size: 2;
+    }
+
+    .code-mini-line.active {
+      background: linear-gradient(90deg, rgba(30, 64, 175, 0.4), rgba(30, 64, 175, 0.15));
+      border-left-color: #38bdf8;
+      color: #ffffff;
+    }
+
+    .code-mini-line.active .ln {
+      color: #38bdf8;
+      font-weight: 700;
     }
 
     .code-mini-line {
@@ -426,11 +500,13 @@
       font-weight: 700;
       min-height: 34px;
       padding: 6px 9px;
+      overflow-wrap: anywhere;
     }
 
     @media (max-width: 1200px) {
       .control-grid,
       .control-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .custom-input-wrap { grid-column: span 2; }
       .buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .panels { grid-template-columns: 1fr; }
       .global-note { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -442,19 +518,34 @@
       .controls,
       .global-note,
       .sim { padding: 10px; }
+      .control-grid { grid-template-columns: 1fr; }
+      .control-row { grid-template-columns: 1fr; }
+      .custom-input-wrap { grid-column: span 1; }
       .buttons { grid-template-columns: 1fr 1fr; }
       .speed-presets { grid-template-columns: 1fr; }
       .global-note { 
         grid-template-columns: 1fr 1fr; 
-        position: sticky; 
-        top: 10px; 
-        z-index: 100;
-        box-shadow: 0 10px 25px rgba(31, 43, 61, 0.15);
+        position: static;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .global-note,
+      .sim-stats,
+      .buttons { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
       }
     }
   </style>
 </head>
-<body>
+<body data-theme="sky">
   <main class="page">
     <section class="hero">
       <div class="hero-top">
@@ -493,14 +584,15 @@
         </div>
         <div>
           <label>Current speed</label>
-          <div id="speedLabel" class="status">260 ms (Normal)</div>
+          <div id="speedLabel" class="status" role="status" aria-live="polite">260 ms (Normal)</div>
         </div>
       </div>
 
       <div class="control-row">
-        <div style="grid-column: span 4;">
+        <div class="custom-input-wrap">
           <label for="customInput">Custom numbers (comma separated, optional)</label>
-          <input id="customInput" type="text" placeholder="34, 64, 12, 25, 11, 90">
+          <input id="customInput" type="text" placeholder="34, 64, 12, 25, 11, 90" aria-describedby="customInputError">
+          <p id="customInputError" class="field-error" role="status" aria-live="polite"></p>
         </div>
         <div>
           <label>&nbsp;</label>
@@ -512,10 +604,10 @@
         </div>
       </div>
 
-      
-      <div class="control-grid" style="margin-top: 10px;">
+        
+      <div class="control-grid secondary">
         <div>
-          <label>Code Language</label>
+          <label for="codeLanguage">Code Language</label>
           <select id="codeLanguage">
             <option value="pseudo">Pseudocode</option>
             <option value="java">Java</option>
@@ -525,7 +617,7 @@
         </div>
         <div>
           <label>&nbsp;</label>
-          <button id="toggleCodeBtn">Hide Code Trace</button>
+          <button id="toggleCodeBtn" type="button">Hide Code Trace</button>
         </div>
       </div>
 
@@ -548,7 +640,7 @@
       <div class="metric"><span>Scenario</span><b id="scenarioStat">Average / Random</b></div>
       <div class="metric"><span>Global Tick</span><b id="tickStat">0</b></div>
       <div class="metric"><span>Started Array</span><b id="arrayStat">-</b></div>
-      <div class="metric"><span>First Finisher</span><b id="winnerStat">Running...</b></div>
+      <div class="metric"><span>First Finisher</span><b id="winnerStat" role="status" aria-live="polite">Running...</b></div>
     </section>
 
     <section class="panels">
@@ -561,11 +653,11 @@
           <div class="metric"><span>Comparisons</span><b id="bubbleComp">0</b></div>
           <div class="metric"><span>Swaps</span><b id="bubbleMove">0</b></div>
         </div>
-        <div id="bubbleAction" class="status"></div>
+        <div id="bubbleAction" class="status" role="status" aria-live="polite"></div>
         <div class="code-mini">
           <div class="code-mini-head">Code Trace</div>
           <div id="bubbleCode" class="code-mini-block"></div>
-          <div id="bubbleCodeNote" class="code-mini-note"></div>
+          <div id="bubbleCodeNote" class="code-mini-note" role="status" aria-live="polite"></div>
         </div>
       </article>
 
@@ -578,11 +670,11 @@
           <div class="metric"><span>Comparisons</span><b id="selectionComp">0</b></div>
           <div class="metric"><span>Swaps</span><b id="selectionMove">0</b></div>
         </div>
-        <div id="selectionAction" class="status"></div>
+        <div id="selectionAction" class="status" role="status" aria-live="polite"></div>
         <div class="code-mini">
           <div class="code-mini-head">Code Trace</div>
           <div id="selectionCode" class="code-mini-block"></div>
-          <div id="selectionCodeNote" class="code-mini-note"></div>
+          <div id="selectionCodeNote" class="code-mini-note" role="status" aria-live="polite"></div>
         </div>
       </article>
 
@@ -595,11 +687,11 @@
           <div class="metric"><span>Comparisons</span><b id="insertionComp">0</b></div>
           <div class="metric"><span>Shifts</span><b id="insertionMove">0</b></div>
         </div>
-        <div id="insertionAction" class="status"></div>
+        <div id="insertionAction" class="status" role="status" aria-live="polite"></div>
         <div class="code-mini">
           <div class="code-mini-head">Code Trace</div>
           <div id="insertionCode" class="code-mini-block"></div>
-          <div id="insertionCodeNote" class="code-mini-note"></div>
+          <div id="insertionCodeNote" class="code-mini-note" role="status" aria-live="polite"></div>
         </div>
       </article>
     </section>
@@ -612,6 +704,7 @@
       speed: document.getElementById("speed"),
       speedLabel: document.getElementById("speedLabel"),
       customInput: document.getElementById("customInput"),
+      customInputError: document.getElementById("customInputError"),
       applyCustomBtn: document.getElementById("applyCustomBtn"),
       generateBtn: document.getElementById("generateBtn"),
       playBtn: document.getElementById("playBtn"),
@@ -835,6 +928,12 @@
       selection: { steps: [], index: 0, doneTick: null },
       insertion: { steps: [], index: 0, doneTick: null }
     };
+
+    function setCustomInputError(message = "") {
+      if (!ui.customInputError || !ui.customInput) return;
+      ui.customInputError.textContent = message;
+      ui.customInput.setAttribute("aria-invalid", message ? "true" : "false");
+    }
 
     function randomArray(size) {
       return Array.from({ length: size }, () => Math.floor(Math.random() * 96) + 5);
@@ -1112,22 +1211,34 @@
       targets.forEach((target) => {
         target.el.innerHTML = "";
         const lines = CODE_LIBRARY[target.key][lang] || CODE_LIBRARY[target.key].pseudo;
-        lines.forEach((line, idx) => {
+        
+        const formatted = window.EnhancedVisualization 
+          ? window.EnhancedVisualization.formatCodeWithIndentation(lines, lang)
+          : lines.map((line, idx) => ({ lineNumber: idx + 1, text: escapeHtml(line), rawText: line }));
+        
+        formatted.forEach((item) => {
           const row = document.createElement("div");
           row.className = "code-mini-line";
-          row.dataset.line = String(idx + 1);
+          row.dataset.line = String(item.lineNumber);
 
           const ln = document.createElement("span");
           ln.className = "ln";
-          ln.textContent = String(idx + 1);
+          ln.textContent = String(item.lineNumber);
 
           const text = document.createElement("span");
-          text.textContent = line;
+          text.className = "code-text";
+          text.innerHTML = item.text;
 
           row.append(ln, text);
           target.el.append(row);
         });
       });
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     function renderCode(simKey, step) {
@@ -1279,6 +1390,7 @@
 
     function rebuild(baseArray, scenario) {
       pause();
+      setCustomInputError("");
       state.scenario = scenario;
       state.baseArray = [...baseArray];
       state.tick = 0;
@@ -1341,10 +1453,16 @@
     ui.applyCustomBtn.addEventListener("click", () => {
       const parsed = parseCustomArray(ui.customInput.value);
       if (parsed.error) {
-        ui.winnerStat.textContent = parsed.error;
+        setCustomInputError(parsed.error);
         return;
       }
       rebuild(parsed.values, "custom");
+    });
+
+    ui.customInput.addEventListener("input", () => {
+      if (ui.customInputError && ui.customInputError.textContent) {
+        setCustomInputError("");
+      }
     });
 
     // Keyboard Shortcuts
@@ -1391,5 +1509,7 @@
     applySpeed(Number(ui.speed.value));
     rebuild(makeScenarioArray(Number(ui.presetSize.value), ui.scenarioType.value), ui.scenarioType.value);
   </script>
+  <script src="theme-manager.js"></script>
+  <script src="visualization-enhancements.js"></script>
 </body>
 </html>

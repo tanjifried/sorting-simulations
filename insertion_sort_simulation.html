@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="theme-manager.css">
+  <link rel="stylesheet" href="visualization-enhancements.css">
   <style>
     :root {
       --bg-a: #fffef5;
@@ -98,6 +100,9 @@
     }
 
     .home-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       text-decoration: none;
       font-weight: 800;
       border-radius: 999px;
@@ -105,11 +110,12 @@
       padding: 8px 12px;
       color: #1e3a8a;
       background: #eff6ff;
+      min-height: 44px;
     }
 
     .layout {
       display: grid;
-      grid-template-columns: 300px 1fr 360px;
+      grid-template-columns: 300px 1fr;
       gap: 20px;
       align-items: start;
       transition: grid-template-columns 0.3s ease;
@@ -121,6 +127,8 @@
       gap: 20px;
       position: sticky;
       top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
     }
 
     .group {
@@ -141,6 +149,14 @@
       font-weight: 600;
     }
 
+    .field-error {
+      margin: -4px 0 0;
+      min-height: 18px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #b42318;
+    }
+
     input,
     select,
     button {
@@ -154,6 +170,7 @@
       border: 1px solid var(--line);
       border-radius: 10px;
       background: #fff;
+      min-height: 44px;
     }
 
     .row {
@@ -174,6 +191,7 @@
       border-radius: 10px;
       cursor: pointer;
       font-weight: 700;
+      min-height: 44px;
       transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
       background: #e2e8f0;
       color: #0f172a;
@@ -192,6 +210,14 @@
     button.warn { background: #f59e0b; color: #241100; }
     button.alt { background: #f97316; color: white; }
     button.neutral { background: #64748b; color: white; }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 3px solid #0ea5e9;
+      outline-offset: 2px;
+    }
 
     .speed-wrap {
       display: grid;
@@ -225,13 +251,6 @@
       background: transparent;
       border: 0;
       box-shadow: none;
-    }
-
-    .sidebar-right {
-      display: grid;
-      gap: 20px;
-      position: sticky;
-      top: 20px;
     }
 
     .bars-wrap {
@@ -324,11 +343,16 @@
     }
 
     .bar-label {
-      font-size: 0.82rem;
+      font-size: clamp(0.74rem, 1.35vw, 0.86rem);
       font-weight: 700;
       color: #334155;
       line-height: 1;
       margin-top: 0;
+    }
+
+    .inline-control-row {
+      display: flex;
+      gap: 8px;
     }
 
     @keyframes keyLift {
@@ -425,6 +449,7 @@
       border: 1px dashed #ffd39e;
       background: #fff8ef;
       color: #9a3412;
+      overflow-wrap: anywhere;
     }
 
     .key-box {
@@ -454,32 +479,49 @@
     }
 
     .code-block {
-      max-height: 240px;
+      max-height: 320px;
       overflow: auto;
       background: #0f172a;
+      font-family: "SFMono-Regular", "JetBrains Mono", Consolas, monospace;
     }
 
     .code-line {
       display: grid;
-      grid-template-columns: 34px 1fr;
-      gap: 8px;
-      padding: 6px 10px;
-      font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
-      font-size: 0.79rem;
-      line-height: 1.4;
+      grid-template-columns: 42px 1fr;
+      gap: 12px;
+      padding: 7px 14px;
+      font-size: 0.82rem;
+      line-height: 1.55;
       color: #cbd5e1;
       border-left: 3px solid transparent;
-      transition: background-color 0.16s ease, border-color 0.16s ease;
+      transition: background-color 0.18s ease, border-color 0.18s ease;
+      white-space: pre;
     }
 
     .code-line .ln {
       color: #64748b;
       text-align: right;
       user-select: none;
+      font-size: 0.75rem;
+      line-height: 1.55;
+    }
+
+    .code-line .code-text {
+      display: block;
+      tab-size: 2;
+      -moz-tab-size: 2;
     }
 
     .code-line.active {
-      background: #172554;
+      background: linear-gradient(90deg, rgba(30, 64, 175, 0.4), rgba(30, 64, 175, 0.15));
+      border-left-color: #38bdf8;
+      color: #ffffff;
+    }
+
+    .code-line.active .ln {
+      color: #38bdf8;
+      font-weight: 700;
+    }
       border-left-color: #22d3ee;
       color: #f8fafc;
     }
@@ -493,6 +535,12 @@
       font-size: 0.84rem;
       line-height: 1.35;
       min-height: 44px;
+      overflow-wrap: anywhere;
+    }
+
+    .panel-toggle {
+      margin-bottom: 10px;
+      width: 100%;
     }
 
     .how {
@@ -513,18 +561,18 @@
 
     @media (max-width: 1250px) {
       .layout { grid-template-columns: 300px 1fr; }
-      .sidebar-right { grid-column: span 2; position: static; }
     }
 
     @media (max-width: 980px) {
       .layout { grid-template-columns: 1fr; }
-      .controls, .sidebar-right { grid-column: auto; position: static; }
+      .controls { grid-column: auto; position: static; }
     }
 
     @media (max-width: 680px) {
       body { padding: 12px; }
       .hero { padding: 14px; }
       .controls, .visual, .how { padding: 12px; }
+      .controls { max-height: none; overflow: visible; }
       .stats { grid-template-columns: 1fr 1fr; }
       .buttons { grid-template-columns: 1fr; }
       .row { grid-template-columns: 1fr; }
@@ -532,16 +580,27 @@
       .bar-label { font-size: 0.74rem; }
       .divider-label { font-size: 0.69rem; }
     }
+
+    @media (max-width: 480px) {
+      .stats { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
   
-    .layout.left-collapsed { grid-template-columns: 50px 1fr 360px; }
-    .layout.right-collapsed { grid-template-columns: 300px 1fr 50px; }
-    .layout.left-collapsed.right-collapsed { grid-template-columns: 50px 1fr 50px; }
-    .layout.left-collapsed .group, .layout.left-collapsed .buttons { display: none; }
-    .layout.right-collapsed .group, .layout.right-collapsed .code-panel, .layout.right-collapsed .how { display: none; }
-    .layout.left-collapsed .toggle-left, .layout.right-collapsed .toggle-right { writing-mode: vertical-rl; text-orientation: mixed; height: 100px; padding: 5px; cursor: pointer;}
+    .layout.left-collapsed { grid-template-columns: 50px 1fr; }
+    .layout.left-collapsed #leftSidebar .group,
+    .layout.left-collapsed #leftSidebar .buttons { display: none; }
+    .layout.left-collapsed .toggle-left { writing-mode: vertical-rl; text-orientation: mixed; height: 100px; padding: 5px; cursor: pointer;}
 </style>
 </head>
-<body>
+<body data-theme="sky">
   <div class="page">
     <section class="hero">
       <div>
@@ -556,7 +615,8 @@
 
     <section class="layout">
       <aside class="controls" id="leftSidebar">
-        <button id="toggleLeftBtn" class="neutral toggle-left" style="margin-bottom: 10px; width: 100%;">Collapse</button>
+        <button id="toggleLeftBtn" class="neutral toggle-left panel-toggle" type="button" aria-expanded="true" aria-controls="leftSidebarContent">Collapse</button>
+        <div id="leftSidebarContent">
         <div class="group">
           <h2>Data Setup</h2>
           <label for="presetSize">Preset size</label>
@@ -578,13 +638,14 @@
             <button id="applyCustomBtn">Apply Custom</button>
           </div>
           <label for="customInput">Custom numbers (comma separated)</label>
-          <input id="customInput" type="text" placeholder="5, 11, 12, 13, 22, 64">
+          <input id="customInput" type="text" placeholder="5, 11, 12, 13, 22, 64" aria-describedby="customInputError">
+          <p id="customInputError" class="field-error" role="status" aria-live="polite"></p>
         </div>
 
         <div class="group">
           <h2>Playback</h2>
           <div class="speed-wrap">
-            <div class="speed-line"><span>Animation speed</span><span id="speedLabel">300 ms (Normal)</span></div>
+            <div class="speed-line"><span>Animation speed</span><span id="speedLabel" role="status" aria-live="polite">300 ms (Normal)</span></div>
             <input id="speed" type="range" min="10" max="1000" step="10" value="300">
             <div class="mini-buttons">
               <button id="speedNormalBtn">Normal</button>
@@ -608,7 +669,8 @@
 
         <div class="group">
           <h2>Live Meaning</h2>
-          <div id="explainText" class="action"></div>
+          <div id="explainText" class="action" role="status" aria-live="polite"></div>
+        </div>
         </div>
       </aside>
 
@@ -639,21 +701,21 @@
 
         
         <div class="group code-controls-group" style="margin-bottom: 10px; display: grid; gap: 8px;">
-          <label>Code Language & View</label>
-          <div style="display: flex; gap: 8px;">
+          <label for="codeLanguage">Code Language & View</label>
+          <div class="inline-control-row">
             <select id="codeLanguage">
               <option value="pseudo">Pseudocode</option>
               <option value="java">Java</option>
               <option value="cpp">C++</option>
               <option value="python">Python</option>
             </select>
-            <button id="toggleCodeBtn">Hide Code</button>
+            <button id="toggleCodeBtn" type="button" aria-controls="codePanel">Hide Code</button>
           </div>
         </div>
         <section class="code-panel" id="codePanel">
           <div class="code-head">Live Code Trace (Insertion Sort)</div>
           <div id="codeBlock" class="code-block" aria-label="Insertion sort pseudocode"></div>
-          <div id="codeNote" class="code-note"></div>
+          <div id="codeNote" class="code-note" role="status" aria-live="polite"></div>
         </section>
       </article>
     </section>
@@ -680,6 +742,7 @@
       generateBtn: document.getElementById("generateBtn"),
       applyCustomBtn: document.getElementById("applyCustomBtn"),
       customInput: document.getElementById("customInput"),
+      customInputError: document.getElementById("customInputError"),
       speed: document.getElementById("speed"),
       speedLabel: document.getElementById("speedLabel"),
       speedNormalBtn: document.getElementById("speedNormalBtn"),
@@ -702,41 +765,32 @@
       codeNote: document.getElementById("codeNote"),
       layout: document.querySelector(".layout"),
       toggleLeftBtn: document.getElementById("toggleLeftBtn"),
-      toggleRightBtn: document.getElementById("toggleRightBtn"),
+      leftSidebarContent: document.getElementById("leftSidebarContent"),
       codeLanguage: document.getElementById("codeLanguage"),
       toggleCodeBtn: document.getElementById("toggleCodeBtn"),
       codePanel: document.getElementById("codePanel")
     };
 
     let leftCollapsed = false;
-    let rightCollapsed = false;
     let codeHidden = false;
+
+    function setCustomInputError(message = "") {
+      if (!ui.customInputError || !ui.customInput) return;
+      ui.customInputError.textContent = message;
+      ui.customInput.setAttribute("aria-invalid", message ? "true" : "false");
+    }
+
+    if (ui.toggleLeftBtn) ui.toggleLeftBtn.setAttribute("aria-expanded", "true");
+    if (ui.leftSidebarContent) ui.leftSidebarContent.setAttribute("aria-hidden", "false");
 
     if (ui.toggleLeftBtn && ui.layout) {
       ui.toggleLeftBtn.addEventListener("click", () => {
         leftCollapsed = !leftCollapsed;
         ui.layout.classList.toggle("left-collapsed", leftCollapsed);
         ui.toggleLeftBtn.textContent = leftCollapsed ? "Expand" : "Collapse";
-      });
-    }
-
-    if (ui.toggleRightBtn && ui.layout) {
-      ui.toggleRightBtn.addEventListener("click", () => {
-        rightCollapsed = !rightCollapsed;
-        ui.layout.classList.toggle("right-collapsed", rightCollapsed);
-        ui.toggleRightBtn.textContent = rightCollapsed ? "Expand" : "Collapse";
-
-        if (!rightCollapsed) {
-          document.querySelectorAll(".layout:not(.right-collapsed) .sidebar-right .group").forEach((el) => {
-            el.style.display = "";
-          });
-          if (!codeHidden && ui.codePanel) {
-            ui.codePanel.style.display = "";
-          }
-          const howPanel = document.querySelector(".layout:not(.right-collapsed) .sidebar-right .how");
-          if (howPanel) {
-            howPanel.style.display = "";
-          }
+        ui.toggleLeftBtn.setAttribute("aria-expanded", leftCollapsed ? "false" : "true");
+        if (ui.leftSidebarContent) {
+          ui.leftSidebarContent.setAttribute("aria-hidden", leftCollapsed ? "true" : "false");
         }
       });
     }
@@ -1136,21 +1190,33 @@
       const lang = ui.codeLanguage ? ui.codeLanguage.value : "pseudo";
       const codeArray = INSERTION_CODE[lang] || INSERTION_CODE.pseudo;
       ui.codeBlock.innerHTML = "";
-      codeArray.forEach((line, idx) => {
+      
+      const formatted = window.EnhancedVisualization 
+        ? window.EnhancedVisualization.formatCodeWithIndentation(codeArray, lang)
+        : codeArray.map((line, idx) => ({ lineNumber: idx + 1, text: escapeHtml(line), rawText: line }));
+      
+      formatted.forEach((item) => {
         const row = document.createElement("div");
         row.className = "code-line";
-        row.dataset.line = String(idx + 1);
+        row.dataset.line = String(item.lineNumber);
 
         const ln = document.createElement("span");
         ln.className = "ln";
-        ln.textContent = String(idx + 1);
+        ln.textContent = String(item.lineNumber);
 
         const text = document.createElement("span");
-        text.textContent = line;
+        text.className = "code-text";
+        text.innerHTML = item.text;
 
         row.append(ln, text);
         ui.codeBlock.append(row);
       });
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     function renderCode(step) {
@@ -1172,6 +1238,10 @@
       updateDivider(step);
       updateStats(step);
       renderCode(step);
+      
+      if (window.EnhancedVisualization) {
+        window.EnhancedVisualization.updateStepIndicator(step);
+      }
     }
 
     function pause() {
@@ -1206,6 +1276,7 @@
 
     function rebuildWith(values, scenario = "random") {
       pause();
+      setCustomInputError("");
       initialArray = [...values];
       activeScenario = scenario;
       steps = computeInsertionSteps(initialArray);
@@ -1221,10 +1292,16 @@
     ui.applyCustomBtn.addEventListener("click", () => {
       const parsed = parseCustomArray(ui.customInput.value);
       if (parsed.error) {
-        ui.explainText.textContent = parsed.error;
+        setCustomInputError(parsed.error);
         return;
       }
       rebuildWith(parsed.values, "custom");
+    });
+
+    ui.customInput.addEventListener("input", () => {
+      if (ui.customInputError && ui.customInputError.textContent) {
+        setCustomInputError("");
+      }
     });
 
     ui.playBtn.addEventListener("click", play);
@@ -1292,5 +1369,7 @@
     applySpeed(Number(ui.speed.value));
     rebuildWith(createScenarioArray(Number(ui.presetSize.value), ui.scenarioType.value), ui.scenarioType.value);
   </script>
+  <script src="theme-manager.js"></script>
+  <script src="visualization-enhancements.js"></script>
 </body>
 </html>
