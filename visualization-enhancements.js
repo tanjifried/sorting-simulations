@@ -38,7 +38,8 @@
       stats: document.querySelector(".stats"),
       legend: document.querySelector(".legend"),
       codePanel: document.getElementById("codePanel"),
-      explainText: document.getElementById("explainText")
+      explainText: document.getElementById("explainText"),
+      howPanel: document.querySelector(".how")
     };
   }
 
@@ -107,6 +108,10 @@
         <input type="checkbox" data-panel="explanation" ${tilingState.explanation ? 'checked' : ''}>
         <span>Explanation</span>
       </label>
+      <div class="tiling-actions">
+        <button type="button" data-preset="swap-code">Swap + Code</button>
+        <button type="button" data-preset="all">Show All</button>
+      </div>
     `;
 
     document.body.appendChild(manager);
@@ -122,6 +127,50 @@
         applyTiling();
       });
     });
+
+    manager.querySelectorAll("button[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (button.dataset.preset === "swap-code") {
+          setSwapCodePreset();
+        } else {
+          setAllPanelsPreset();
+        }
+      });
+    });
+  }
+
+  function syncTilingCheckboxes() {
+    if (!ui.tilingManager) return;
+    ui.tilingManager.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+      const panel = checkbox.dataset.panel;
+      const checked = Boolean(tilingState[panel]);
+      checkbox.checked = checked;
+      const row = checkbox.closest(".tiling-option");
+      if (row) {
+        row.classList.toggle("checked", checked);
+      }
+    });
+  }
+
+  function setSwapCodePreset() {
+    tilingState = {
+      controls: false,
+      visualization: true,
+      codeTrace: true,
+      stats: false,
+      legend: false,
+      explanation: false
+    };
+    saveTilingPreferences();
+    syncTilingCheckboxes();
+    applyTiling();
+  }
+
+  function setAllPanelsPreset() {
+    tilingState = { ...DEFAULT_TILING };
+    saveTilingPreferences();
+    syncTilingCheckboxes();
+    applyTiling();
   }
 
   function injectStepIndicator() {
@@ -151,6 +200,8 @@
     if (ui.tilingManager) {
       ui.tilingManager.style.display = "flex";
     }
+
+    applyLayoutPreset();
   }
 
   function exitFullscreen() {
@@ -170,9 +221,6 @@
   }
 
   function applyTiling() {
-    if (!ui.controls) return;
-    
-    // Apply panel visibility based on tiling state
     if (ui.controls) {
       ui.controls.classList.toggle("panel-hidden", !tilingState.controls);
       ui.controls.classList.toggle("panel-visible", tilingState.controls);
@@ -200,6 +248,35 @@
         explainContainer.style.display = tilingState.explanation ? "" : "none";
       }
     }
+
+    if (ui.howPanel) {
+      ui.howPanel.style.display = tilingState.explanation ? "" : "none";
+    }
+
+    if (ui.sidebarRight) {
+      const rightVisible = tilingState.codeTrace || tilingState.explanation;
+      ui.sidebarRight.style.display = rightVisible ? "" : "none";
+    }
+
+    applyLayoutPreset();
+  }
+
+  function applyLayoutPreset() {
+    if (!ui.layout || !ui.body.classList.contains("is-fullscreen")) return;
+
+    const showControls = tilingState.controls;
+    const showRight = tilingState.codeTrace || tilingState.explanation;
+    let template = "1fr";
+
+    if (showControls && showRight) {
+      template = "300px minmax(0, 1fr) 380px";
+    } else if (showControls) {
+      template = "300px minmax(0, 1fr)";
+    } else if (showRight) {
+      template = "minmax(0, 1fr) 380px";
+    }
+
+    ui.layout.style.gridTemplateColumns = template;
   }
 
   function loadTilingPreferences() {
@@ -233,6 +310,11 @@
     typeEl.className = `step-type ${type}`;
     typeEl.textContent = type.replace("-", " ");
     descEl.textContent = step.action || getDefaultActionDescription(type);
+
+    const isSwapFocus = type === "swap" || type === "shift";
+    if (ui.bars) {
+      ui.bars.classList.toggle("swap-focus", isSwapFocus);
+    }
   }
 
   function getDefaultActionDescription(type) {
@@ -251,6 +333,9 @@
     document.addEventListener("fullscreenchange", () => {
       if (!document.fullscreenElement) {
         ui.body.classList.remove("is-fullscreen");
+        if (ui.layout) {
+          ui.layout.style.gridTemplateColumns = "";
+        }
         if (ui.tilingManager) {
           ui.tilingManager.style.display = "none";
         }
@@ -273,18 +358,9 @@
   // Enhanced code formatting with indentation preservation
   function formatCodeWithIndentation(codeLines, language) {
     return codeLines.map((line, index) => {
-      let formatted = escapeHtml(line);
-      
-      // Apply syntax highlighting
-      if (language === "pseudo") {
-        formatted = highlightPseudoCode(formatted);
-      } else if (["java", "cpp", "python"].includes(language)) {
-        formatted = highlightProgrammingCode(formatted, language);
-      }
-      
       return {
         lineNumber: index + 1,
-        text: formatted,
+        text: escapeHtml(line),
         rawText: line
       };
     });
@@ -294,55 +370,6 @@
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
-  }
-
-  function highlightPseudoCode(text) {
-    // Keywords
-    text = text.replace(/\b(function|for|if|return|while)\b/g, '<span class="keyword">$1</span>');
-    
-    // Function names
-    text = text.replace(/\b([a-zA-Z_]\w*)(?=\()/g, '<span class="function">$1</span>');
-    
-    // Comments (lines starting with // or after #)
-    if (text.includes("//") || text.includes("#")) {
-      text = text.replace(/(\/\/.*$|#.*$)/, '<span class="comment">$1</span>');
-    }
-    
-    // Numbers
-    text = text.replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
-    
-    // Operators
-    text = text.replace(/(=|>|<|>=|<=|==|!=|\+|-|\*|\/)/g, '<span class="operator">$1</span>');
-    
-    return text;
-  }
-
-  function highlightProgrammingCode(text, language) {
-    // Common highlighting for Java, C++, Python
-    const keywords = language === "python" 
-      ? "def|class|if|elif|else|for|while|return|in|not|and|or|True|False|None"
-      : "void|int|boolean|bool|if|else|for|while|return|true|false|null|class|public|private";
-    
-    const keywordRegex = new RegExp(`\\b(${keywords})\\b`, "g");
-    text = text.replace(keywordRegex, '<span class="keyword">$1</span>');
-    
-    // Function names
-    text = text.replace(/\b([a-zA-Z_]\w*)(?=\()/g, '<span class="function">$1</span>');
-    
-    // Comments
-    if (language === "python") {
-      text = text.replace(/(#.*$)/, '<span class="comment">$1</span>');
-    } else {
-      text = text.replace(/(\/\/.*$)/, '<span class="comment">$1</span>');
-    }
-    
-    // Numbers
-    text = text.replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
-    
-    // Variables (simplified)
-    text = text.replace(/\b([a-zA-Z_]\w*)\b(?![\(<])/g, '<span class="variable">$1</span>');
-    
-    return text;
   }
 
   // Expose API
