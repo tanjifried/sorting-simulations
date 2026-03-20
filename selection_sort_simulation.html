@@ -89,6 +89,23 @@
       font-size: 0.9rem;
     }
 
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .home-link {
+      text-decoration: none;
+      font-weight: 800;
+      border-radius: 999px;
+      border: 1px solid #bfdbfe;
+      padding: 8px 12px;
+      color: #1e3a8a;
+      background: #eff6ff;
+    }
+
     .layout {
       display: grid;
       grid-template-columns: 300px 1fr 360px;
@@ -233,10 +250,11 @@
       flex: 1;
       min-width: 20px;
       height: 100%;
-      display: grid;
-      gap: 1px;
-      align-items: end;
-      justify-items: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 2px;
     }
 
     .bar {
@@ -486,7 +504,10 @@
         <h1 class="title">Selection Sort Visualizer</h1>
         <p class="subtitle">This method scans the unsorted section to find the smallest value, then places it at the front. One correct position is finalized each pass.</p>
       </div>
-      <span class="badge">Find minimum, then place it</span>
+      <div class="hero-actions">
+        <span class="badge">Find minimum, then place it</span>
+        <a class="home-link" href="index.html">Back to Home</a>
+      </div>
     </section>
 
     <section class="layout">
