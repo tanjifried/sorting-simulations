@@ -86,7 +86,6 @@
     var stepIndex = 0;
     var timer = null;
     var isPlaying = false;
-    var queuedAutoAdvance = 0;
     var queuedManualAdvance = 0;
 
     function getSketch() {
@@ -196,15 +195,28 @@
 
       timer = window.setTimeout(function () {
         timer = null;
+        // Poll until animation is done — avoids missing animationend events
         if (isAnimating()) {
-          queuedAutoAdvance += 1;
-          syncButtons();
+          waitForAnimationThenAdvance();
           return;
         }
         stepIndex += 1;
         applyCurrentStep(false);
         scheduleNext();
       }, getInterval());
+    }
+
+    function waitForAnimationThenAdvance() {
+      if (!isPlaying) return;
+      if (!isAnimating()) {
+        stepIndex += 1;
+        applyCurrentStep(false);
+        scheduleNext();
+        return;
+      }
+      window.requestAnimationFrame(function () {
+        waitForAnimationThenAdvance();
+      });
     }
 
     function play() {
@@ -258,28 +270,16 @@
 
       if (queuedManualAdvance > 0) {
         queuedManualAdvance -= 1;
-      } else if (isPlaying && queuedAutoAdvance > 0) {
-        queuedAutoAdvance -= 1;
-      } else {
-        syncButtons();
-        return;
+        stepIndex = clamp(stepIndex + 1, 0, Math.max(0, getSteps().length - 1));
+        applyCurrentStep(false);
+
+        if (!isAnimating() && queuedManualAdvance > 0) {
+          window.setTimeout(flushQueuedAdvance, 0);
+          return;
+        }
       }
 
-      stepIndex = clamp(stepIndex + 1, 0, Math.max(0, getSteps().length - 1));
-      applyCurrentStep(false);
-
-      if (isAnimating()) {
-        return;
-      }
-
-      if (queuedManualAdvance > 0 || (isPlaying && queuedAutoAdvance > 0)) {
-        window.setTimeout(flushQueuedAdvance, 0);
-        return;
-      }
-
-      if (isPlaying) {
-        scheduleNext();
-      }
+      syncButtons();
     }
 
     function regenerate() {

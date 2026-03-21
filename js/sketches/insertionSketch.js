@@ -1,13 +1,20 @@
 (function () {
   var SHIFT_FRAMES = 18;
-  var PULSE_FRAMES = 8;
+
+  var colorCache = {};
+  var lastTheme = null;
+
+  function getCSSVarCached(name) {
+    var theme = document.body.getAttribute('data-theme') || 'dark';
+    if (theme !== lastTheme) { colorCache = {}; lastTheme = theme; }
+    if (!colorCache[name]) {
+      colorCache[name] = getComputedStyle(document.body).getPropertyValue(name).trim();
+    }
+    return colorCache[name];
+  }
 
   function resolveContainer(containerRef) {
     return typeof containerRef === 'string' ? document.getElementById(containerRef) : containerRef;
-  }
-
-  function getCSSVar(name) {
-    return getComputedStyle(document.body).getPropertyValue(name).trim();
   }
 
   function hexToRgb(hex) {
@@ -22,12 +29,12 @@
   }
 
   function stateColor(state) {
-    if (state === 'compare') return getCSSVar('--bar-compare');
-    if (state === 'sorted')  return getCSSVar('--bar-sorted');
-    if (state === 'noswap')  return getCSSVar('--bar-noswap');
-    if (state === 'key')     return getCSSVar('--bar-key');
-    if (state === 'shift')   return getCSSVar('--bar-shift');
-    return getCSSVar('--bar-default');
+    if (state === 'compare') return getCSSVarCached('--bar-compare');
+    if (state === 'sorted')  return getCSSVarCached('--bar-sorted');
+    if (state === 'noswap')  return getCSSVarCached('--bar-noswap');
+    if (state === 'key')     return getCSSVarCached('--bar-key');
+    if (state === 'shift')   return getCSSVarCached('--bar-shift');
+    return getCSSVarCached('--bar-default');
   }
 
   function barStateForStep(index, step) {
@@ -40,21 +47,13 @@
     return 'default';
   }
 
-  function comparisonIndicesForStep(step) {
-    if (typeof step.comparing === 'number' && typeof step.keyIdx === 'number') {
-      return [step.comparing, step.keyIdx];
-    }
-    return [];
-  }
-
-  // For shift steps, animate the shifted bar sliding right and key bar gliding left
   function getShiftAnimation(step) {
     if (step.type !== 'shift') return null;
     if (typeof step.shiftedIdx !== 'number' || typeof step.keyIdx !== 'number') return null;
     return { shiftedIdx: step.shiftedIdx, keyIdx: step.keyIdx };
   }
 
-  function mountSketch(containerRef, _algorithm) {
+  function mountSketch(containerRef) {
     var sketch = function (p) {
       var bars = [];
       var maxVal = 100;
@@ -64,12 +63,10 @@
       var paddingSides = 16;
       var barGap = 4;
       var canvasHeight = 340;
-      var nextBarId = 0;
       var currentStep = null;
       var animating = false;
       var animFrame = 0;
       var shiftState = null;
-      var pulseState = null;
       var registeredAnimation = false;
 
       function updateGlobalAnimation(active) {
@@ -87,13 +84,11 @@
       }
 
       function makeBar(value) {
-        nextBarId += 1;
-        return { id: nextBarId, value: value, displayH: 0, state: 'default', label: String(value) };
+        return { value: value, displayH: 0, state: 'default', label: String(value) };
       }
 
       function syncBarsFromArray(array) {
-        var i;
-        for (i = 0; i < array.length; i += 1) {
+        for (var i = 0; i < array.length; i++) {
           if (!bars[i]) bars[i] = makeBar(array[i]);
           bars[i].value = array[i];
           bars[i].label = String(array[i]);
@@ -102,10 +97,8 @@
       }
 
       function syncStates(step) {
-        var i;
-        for (i = 0; i < bars.length; i += 1) {
+        for (var i = 0; i < bars.length; i++) {
           bars[i].state = barStateForStep(i, step);
-          bars[i].label = String(bars[i].value);
         }
       }
 
@@ -113,23 +106,13 @@
         animating = false;
         animFrame = 0;
         shiftState = null;
-        pulseState = null;
         updateGlobalAnimation(false);
-      }
-
-      function startPulse(step) {
-        var indices = comparisonIndicesForStep(step);
-        pulseState = indices.length ? { indices: indices, frame: 0 } : null;
       }
 
       function startShift(step) {
         var anim = getShiftAnimation(step);
         if (!anim) return false;
-        if (!bars[anim.shiftedIdx] || !bars[anim.keyIdx]) {
-          syncBarsFromArray(step.array);
-          return false;
-        }
-        pulseState = null;
+        if (!bars[anim.shiftedIdx] || !bars[anim.keyIdx]) { syncBarsFromArray(step.array); return false; }
         currentStep = step;
         maxVal = Math.max(1, Math.max.apply(null, step.array));
         syncStates(step);
@@ -149,15 +132,15 @@
       };
 
       p.draw = function () {
-        var bg = hexToRgb(getCSSVar('--surface-2'));
-        var textColor = hexToRgb(getCSSVar('--muted'));
+        var bg = hexToRgb(getCSSVarCached('--surface-2'));
+        var textColor = hexToRgb(getCSSVarCached('--muted'));
         p.background(bg[0], bg[1], bg[2]);
         if (!bars.length) return;
 
         var usableW = p.width - paddingSides * 2;
         var barW = (usableW - barGap * (bars.length - 1)) / bars.length;
 
-        // Draw order: key bar on top during shift animation
+        // key bar on top during shift
         var drawOrder = [];
         for (var k = 0; k < bars.length; k++) drawOrder.push(k);
         if (animating && shiftState) {
@@ -168,10 +151,11 @@
           drawOrder.push(shiftState.keyIdx);
         }
 
-        for (var j = 0; j < drawOrder.length; j += 1) {
+        for (var j = 0; j < drawOrder.length; j++) {
           var i = drawOrder[j];
           var targetH = (bars[i].value / maxVal) * (p.height - paddingTop - paddingBottom);
-          bars[i].displayH = p.lerp(bars[i].displayH, targetH, lerpSpeed);
+          var diff = targetH - bars[i].displayH;
+          bars[i].displayH = Math.abs(diff) < 0.4 ? targetH : bars[i].displayH + diff * lerpSpeed;
 
           var x = paddingSides + i * (barW + barGap);
           var y = p.height - paddingBottom - bars[i].displayH;
@@ -181,25 +165,20 @@
 
           if (animating && shiftState) {
             var t = animFrame / SHIFT_FRAMES;
-            var ease = t * t * (3 - 2 * t);
             var arc = Math.sin(t * Math.PI);
+            var ease = t * t * (3 - 2 * t);
 
             if (i === shiftState.shiftedIdx) {
-              // Shifted bar slides right one slot
+              // slide right one slot
               var targetX = paddingSides + (i + 1) * (barW + barGap);
-              x = p.lerp(x, targetX, ease);
-              brightness = 1 - arc * 0.25;
-              alpha = 255 * (1 - arc * 0.3);
+              x = x + (targetX - x) * ease;
+              brightness = 1 - arc * 0.2;
+              alpha = 255 * (1 - arc * 0.25);
             } else if (i === shiftState.keyIdx) {
-              // Key bar lifts slightly to signal it is the element being inserted
-              scale = 1 + arc * 0.12;
-              y -= arc * 16;
-              brightness = 1 + arc * 0.15;
+              scale = 1 + arc * 0.10;
+              y -= arc * 14;
+              brightness = 1 + arc * 0.14;
             }
-          } else if (pulseState && pulseState.indices.indexOf(i) !== -1) {
-            var pulseT = pulseState.frame / Math.max(1, PULSE_FRAMES - 1);
-            var pulseStrength = pulseT < 0.5 ? pulseT * 2 : (1 - pulseT) * 2;
-            alpha = 255 * (1 - pulseStrength * 0.5);
           }
 
           p.noStroke();
@@ -210,22 +189,18 @@
             clamp(baseColor.levels[2] * brightness, 0, 255),
             alpha
           );
-
-          var finalW = barW * scale;
-          var finalH = bars[i].displayH * scale;
-          var xAdjust = (barW - finalW) / 2;
-          var yAdjust = bars[i].displayH - finalH;
-
-          p.rect(x + xAdjust, y + yAdjust, finalW, finalH, 4 * scale, 4 * scale, 0, 0);
+          var fw = barW * scale;
+          var fh = bars[i].displayH * scale;
+          p.rect(x + (barW - fw) / 2, y + (bars[i].displayH - fh), fw, fh, 4, 4, 0, 0);
 
           p.fill(textColor[0], textColor[1], textColor[2], alpha);
-          p.textSize(10 * scale);
+          p.textSize(10);
           p.textAlign(p.CENTER, p.TOP);
-          p.text(bars[i].label, x + barW / 2, p.height - paddingBottom + 12);
+          p.text(bars[i].label, x + barW / 2, p.height - paddingBottom + 10);
         }
 
         if (animating) {
-          animFrame += 1;
+          animFrame++;
           if (animFrame >= SHIFT_FRAMES && shiftState) {
             animating = false;
             animFrame = 0;
@@ -233,13 +208,6 @@
             syncBarsFromArray(currentStep.array);
             syncStates(currentStep);
             updateGlobalAnimation(false);
-          }
-        }
-
-        if (pulseState) {
-          pulseState.frame += 1;
-          if (pulseState.frame >= PULSE_FRAMES) {
-            pulseState = null;
           }
         }
       };
@@ -253,12 +221,9 @@
         stopAnimations();
         currentStep = step;
         maxVal = Math.max(1, Math.max.apply(null, step.array));
-        if (startShift(step)) {
-          return;
-        }
+        if (startShift(step)) return;
         syncBarsFromArray(step.array);
         syncStates(step);
-        startPulse(step);
       };
 
       p.resetBars = function (array) {
@@ -267,14 +232,9 @@
         bars = array.map(function (v) { return makeBar(v); });
       };
 
-      p.setLerpSpeed = function (value) {
-        lerpSpeed = value;
-      };
+      p.setLerpSpeed = function (value) { lerpSpeed = value; };
 
-      p.destroy = function () {
-        stopAnimations();
-        p.remove();
-      };
+      p.destroy = function () { stopAnimations(); p.remove(); };
     };
 
     return new p5(sketch);

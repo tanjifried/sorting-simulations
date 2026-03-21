@@ -1176,6 +1176,56 @@
       });
     }
 
+    function installEdgeDrag(handle, trackType, index, ws, buildTemplate, save, rerender, syncResize) {
+      handle.addEventListener('pointerdown', function (e) {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        handle.setPointerCapture(e.pointerId);
+
+        var computed = getComputedStyle(ws.root);
+        var pixels = trackType === 'col'
+          ? parseTrackPixels(computed.gridTemplateColumns)
+          : parseTrackPixels(computed.gridTemplateRows);
+        var firstStart = pixels[index];
+        var secondStart = pixels[index + 1];
+        var total = firstStart + secondStart;
+        var pointerStart = trackType === 'col' ? e.clientX : e.clientY;
+
+        document.body.style.cursor = trackType === 'col' ? 'col-resize' : 'row-resize';
+        document.body.style.userSelect = 'none';
+
+        function onMove(me) {
+          var delta = (trackType === 'col' ? me.clientX : me.clientY) - pointerStart;
+          var minSize = trackType === 'col' ? 200 : 160;
+          var first = clamp(firstStart + delta, minSize, total - minSize);
+          var second = total - first;
+          var sizes = trackType === 'col' ? ws.layout.colSizes : ws.layout.rowSizes;
+          sizes[index] = ((first / total) * 100).toFixed(3) + '%';
+          sizes[index + 1] = ((second / total) * 100).toFixed(3) + '%';
+          ws.root.style.setProperty(
+            trackType === 'col' ? '--tile-cols' : '--tile-rows',
+            buildTemplate(sizes, trackType === 'col' ? 200 : 160)
+          );
+          syncResize(0);
+        }
+
+        function onUp() {
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          handle.removeEventListener('pointermove', onMove);
+          handle.removeEventListener('pointerup', onUp);
+          handle.removeEventListener('pointercancel', onUp);
+          save();
+          rerender();
+        }
+
+        handle.addEventListener('pointermove', onMove);
+        handle.addEventListener('pointerup', onUp);
+        handle.addEventListener('pointercancel', onUp);
+      });
+    }
+
     function renderGutters() {
       var computed = getComputedStyle(workspace.root);
       var colPixels = parseTrackPixels(computed.gridTemplateColumns);
@@ -1230,6 +1280,22 @@
 
         if (tile.content === 'empty') {
           tileEl.classList.add('empty');
+
+          // Hover-reveal remove button for empty tiles
+          var emptyRemoveBtn = document.createElement('button');
+          emptyRemoveBtn.type = 'button';
+          emptyRemoveBtn.className = 'tile-empty-remove';
+          emptyRemoveBtn.innerHTML = '&times;';
+          emptyRemoveBtn.title = 'Remove empty panel';
+          emptyRemoveBtn.setAttribute('aria-label', 'Remove empty panel');
+          (function (tileId) {
+            emptyRemoveBtn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              clearTile(tileId);
+            });
+          }(tile.id));
+          tileEl.appendChild(emptyRemoveBtn);
+
           var emptyBtn = document.createElement('button');
           emptyBtn.className = 'tile-empty-trigger';
           emptyBtn.type = 'button';
@@ -1284,6 +1350,28 @@
 
           // Defer until after all tiles are appended to the live DOM
           deferredAttach.push({ tile: tile, body: body });
+        }
+
+        // ── Edge resize handles ──
+        // Right edge: resize column
+        if (workspace.layout.cols > 1 && tile.col < workspace.layout.cols) {
+          var rHandle = document.createElement('div');
+          rHandle.className = 'tile-edge-handle tile-edge-right';
+          rHandle.setAttribute('aria-label', 'Resize column');
+          (function (colIndex) {
+            installEdgeDrag(rHandle, 'col', colIndex, workspace, buildTrackTemplate, saveLayout, renderWorkspace, dispatchSyntheticResize);
+          }(tile.col - 1));
+          tileEl.appendChild(rHandle);
+        }
+        // Bottom edge: resize row
+        if (workspace.layout.rows > 1 && tile.row < workspace.layout.rows) {
+          var bHandle = document.createElement('div');
+          bHandle.className = 'tile-edge-handle tile-edge-bottom';
+          bHandle.setAttribute('aria-label', 'Resize row');
+          (function (rowIndex) {
+            installEdgeDrag(bHandle, 'row', rowIndex, workspace, buildTrackTemplate, saveLayout, renderWorkspace, dispatchSyntheticResize);
+          }(tile.row - 1));
+          tileEl.appendChild(bHandle);
         }
 
         workspace.root.appendChild(tileEl);
