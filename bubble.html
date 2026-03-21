@@ -148,10 +148,16 @@
       onStepChange: function (step, idx, total) {
         currentStep = step;
         document.getElementById('narration').textContent = step.action;
-        document.getElementById('passStat').textContent = step.pass + ' / ' + step.totalPasses;
+        var passEl = document.getElementById('passStat');
+        var compEl = document.getElementById('compStat');
+        var swapEl = document.getElementById('swapStat');
+        var newPass = step.pass + ' / ' + step.totalPasses;
+        var newComp = String(step.comparisons);
+        var newSwap = String(step.swaps);
+        if (passEl.textContent !== newPass) { passEl.textContent = newPass; SortLabShell.bumpStat(passEl); }
+        if (compEl.textContent !== newComp) { compEl.textContent = newComp; SortLabShell.bumpStat(compEl); }
+        if (swapEl.textContent !== newSwap) { swapEl.textContent = newSwap; SortLabShell.bumpStat(swapEl); }
         document.getElementById('stepStat').textContent = (idx + 1) + ' / ' + total;
-        document.getElementById('compStat').textContent = step.comparisons;
-        document.getElementById('swapStat').textContent = step.swaps;
         renderCodeForStep(step);
       },
       speedEl: document.getElementById('speed'),

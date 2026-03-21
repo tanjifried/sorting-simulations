@@ -1,4 +1,5 @@
 (function () {
+  var SHIFT_FRAMES = 14;
   var PULSE_FRAMES = 8;
 
   function resolveContainer(containerRef) {
@@ -22,10 +23,10 @@
 
   function stateColor(state) {
     if (state === 'compare') return getCSSVar('--bar-compare');
-    if (state === 'sorted') return getCSSVar('--bar-sorted');
-    if (state === 'noswap') return getCSSVar('--bar-noswap');
-    if (state === 'key') return getCSSVar('--bar-key');
-    if (state === 'shift') return getCSSVar('--bar-shift');
+    if (state === 'sorted')  return getCSSVar('--bar-sorted');
+    if (state === 'noswap')  return getCSSVar('--bar-noswap');
+    if (state === 'key')     return getCSSVar('--bar-key');
+    if (state === 'shift')   return getCSSVar('--bar-shift');
     return getCSSVar('--bar-default');
   }
 
@@ -46,7 +47,14 @@
     return [];
   }
 
-  function mountSketch(containerRef) {
+  // For shift steps, animate the shifted bar sliding right and key bar gliding left
+  function getShiftAnimation(step) {
+    if (step.type !== 'shift') return null;
+    if (typeof step.shiftedIdx !== 'number' || typeof step.keyIdx !== 'number') return null;
+    return { shiftedIdx: step.shiftedIdx, keyIdx: step.keyIdx };
+  }
+
+  function mountSketch(containerRef, _algorithm) {
     var sketch = function (p) {
       var bars = [];
       var maxVal = 100;
@@ -56,7 +64,81 @@
       var paddingSides = 16;
       var barGap = 4;
       var canvasHeight = 340;
+      var nextBarId = 0;
+      var currentStep = null;
+      var animating = false;
+      var animFrame = 0;
+      var shiftState = null;
       var pulseState = null;
+      var registeredAnimation = false;
+
+      function updateGlobalAnimation(active) {
+        if (active && !registeredAnimation) {
+          window.sortLabAnimationCount = (window.sortLabAnimationCount || 0) + 1;
+          registeredAnimation = true;
+        } else if (!active && registeredAnimation) {
+          window.sortLabAnimationCount = Math.max(0, (window.sortLabAnimationCount || 1) - 1);
+          registeredAnimation = false;
+          if (!window.sortLabAnimationCount) {
+            window.dispatchEvent(new Event('sortlab:animationend'));
+          }
+        }
+        window.sortLabAnimating = !!window.sortLabAnimationCount;
+      }
+
+      function makeBar(value) {
+        nextBarId += 1;
+        return { id: nextBarId, value: value, displayH: 0, state: 'default', label: String(value) };
+      }
+
+      function syncBarsFromArray(array) {
+        var i;
+        for (i = 0; i < array.length; i += 1) {
+          if (!bars[i]) bars[i] = makeBar(array[i]);
+          bars[i].value = array[i];
+          bars[i].label = String(array[i]);
+        }
+        bars.length = array.length;
+      }
+
+      function syncStates(step) {
+        var i;
+        for (i = 0; i < bars.length; i += 1) {
+          bars[i].state = barStateForStep(i, step);
+          bars[i].label = String(bars[i].value);
+        }
+      }
+
+      function stopAnimations() {
+        animating = false;
+        animFrame = 0;
+        shiftState = null;
+        pulseState = null;
+        updateGlobalAnimation(false);
+      }
+
+      function startPulse(step) {
+        var indices = comparisonIndicesForStep(step);
+        pulseState = indices.length ? { indices: indices, frame: 0 } : null;
+      }
+
+      function startShift(step) {
+        var anim = getShiftAnimation(step);
+        if (!anim) return false;
+        if (!bars[anim.shiftedIdx] || !bars[anim.keyIdx]) {
+          syncBarsFromArray(step.array);
+          return false;
+        }
+        pulseState = null;
+        currentStep = step;
+        maxVal = Math.max(1, Math.max.apply(null, step.array));
+        syncStates(step);
+        shiftState = { shiftedIdx: anim.shiftedIdx, keyIdx: anim.keyIdx };
+        animating = true;
+        animFrame = 0;
+        updateGlobalAnimation(true);
+        return true;
+      }
 
       p.setup = function () {
         var container = resolveContainer(containerRef);
@@ -75,29 +157,83 @@
         var usableW = p.width - paddingSides * 2;
         var barW = (usableW - barGap * (bars.length - 1)) / bars.length;
 
-        for (var i = 0; i < bars.length; i += 1) {
+        // Draw order: key bar on top during shift animation
+        var drawOrder = [];
+        for (var k = 0; k < bars.length; k++) drawOrder.push(k);
+        if (animating && shiftState) {
+          drawOrder = [];
+          for (var k = 0; k < bars.length; k++) {
+            if (k !== shiftState.keyIdx) drawOrder.push(k);
+          }
+          drawOrder.push(shiftState.keyIdx);
+        }
+
+        for (var j = 0; j < drawOrder.length; j += 1) {
+          var i = drawOrder[j];
           var targetH = (bars[i].value / maxVal) * (p.height - paddingTop - paddingBottom);
           bars[i].displayH = p.lerp(bars[i].displayH, targetH, lerpSpeed);
 
           var x = paddingSides + i * (barW + barGap);
           var y = p.height - paddingBottom - bars[i].displayH;
           var alpha = 255;
+          var scale = 1.0;
+          var brightness = 1.0;
 
-          if (pulseState && pulseState.indices.indexOf(i) !== -1) {
+          if (animating && shiftState) {
+            var t = animFrame / SHIFT_FRAMES;
+            var ease = t * t * (3 - 2 * t);
+            var arc = Math.sin(t * Math.PI);
+
+            if (i === shiftState.shiftedIdx) {
+              // Shifted bar slides right one slot
+              var targetX = paddingSides + (i + 1) * (barW + barGap);
+              x = p.lerp(x, targetX, ease);
+              brightness = 1 - arc * 0.25;
+              alpha = 255 * (1 - arc * 0.3);
+            } else if (i === shiftState.keyIdx) {
+              // Key bar lifts slightly to signal it is the element being inserted
+              scale = 1 + arc * 0.12;
+              y -= arc * 16;
+              brightness = 1 + arc * 0.15;
+            }
+          } else if (pulseState && pulseState.indices.indexOf(i) !== -1) {
             var pulseT = pulseState.frame / Math.max(1, PULSE_FRAMES - 1);
             var pulseStrength = pulseT < 0.5 ? pulseT * 2 : (1 - pulseT) * 2;
             alpha = 255 * (1 - pulseStrength * 0.5);
           }
 
           p.noStroke();
-          var fillColor = p.color(stateColor(bars[i].state));
-          p.fill(fillColor.levels[0], fillColor.levels[1], fillColor.levels[2], alpha);
-          p.rect(x, y, barW, bars[i].displayH, 4, 4, 0, 0);
+          var baseColor = p.color(stateColor(bars[i].state));
+          p.fill(
+            clamp(baseColor.levels[0] * brightness, 0, 255),
+            clamp(baseColor.levels[1] * brightness, 0, 255),
+            clamp(baseColor.levels[2] * brightness, 0, 255),
+            alpha
+          );
 
-          p.fill(textColor[0], textColor[1], textColor[2]);
-          p.textSize(10);
+          var finalW = barW * scale;
+          var finalH = bars[i].displayH * scale;
+          var xAdjust = (barW - finalW) / 2;
+          var yAdjust = bars[i].displayH - finalH;
+
+          p.rect(x + xAdjust, y + yAdjust, finalW, finalH, 4 * scale, 4 * scale, 0, 0);
+
+          p.fill(textColor[0], textColor[1], textColor[2], alpha);
+          p.textSize(10 * scale);
           p.textAlign(p.CENTER, p.TOP);
           p.text(bars[i].label, x + barW / 2, p.height - paddingBottom + 12);
+        }
+
+        if (animating) {
+          animFrame += 1;
+          if (animFrame >= SHIFT_FRAMES && shiftState) {
+            animating = false;
+            animFrame = 0;
+            shiftState = null;
+            syncBarsFromArray(currentStep.array);
+            syncStates(currentStep);
+            updateGlobalAnimation(false);
+          }
         }
 
         if (pulseState) {
@@ -114,28 +250,21 @@
       };
 
       p.applyStep = function (step) {
-        pulseState = null;
-        window.sortLabAnimating = !!window.sortLabAnimationCount;
+        stopAnimations();
+        currentStep = step;
         maxVal = Math.max(1, Math.max.apply(null, step.array));
-        step.array.forEach(function (val, i) {
-          if (!bars[i]) bars[i] = { value: val, displayH: 0, state: 'default', label: String(val) };
-          bars[i].value = val;
-          bars[i].state = barStateForStep(i, step);
-          bars[i].label = String(val);
-        });
-        bars.length = step.array.length;
-        var indices = comparisonIndicesForStep(step);
-        if (indices.length) {
-          pulseState = { indices: indices, frame: 0 };
+        if (startShift(step)) {
+          return;
         }
+        syncBarsFromArray(step.array);
+        syncStates(step);
+        startPulse(step);
       };
 
       p.resetBars = function (array) {
-        pulseState = null;
+        stopAnimations();
         maxVal = Math.max(1, Math.max.apply(null, array));
-        bars = array.map(function (v) {
-          return { value: v, displayH: 0, state: 'default', label: String(v) };
-        });
+        bars = array.map(function (v) { return makeBar(v); });
       };
 
       p.setLerpSpeed = function (value) {
@@ -143,7 +272,7 @@
       };
 
       p.destroy = function () {
-        pulseState = null;
+        stopAnimations();
         p.remove();
       };
     };

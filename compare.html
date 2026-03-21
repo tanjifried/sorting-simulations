@@ -258,10 +258,17 @@
         document.getElementById('globalStep').textContent = (idx + 1) + ' / ' + total;
         document.getElementById('sharedArrayView').textContent = '[' + sharedArray.join(', ') + ']';
 
+        function bump(id, val) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          const s = String(val);
+          if (el.textContent !== s) { el.textContent = s; SortLabShell.bumpStat(el); }
+        }
+
         document.getElementById('bubbleNarration').textContent = bubbleStep.action;
         document.getElementById('bubbleStep').textContent = (Math.min(idx, bubbleSteps.length - 1) + 1) + ' / ' + bubbleSteps.length;
-        document.getElementById('bubbleComp').textContent = bubbleStep.comparisons;
-        document.getElementById('bubbleSwap').textContent = bubbleStep.swaps;
+        bump('bubbleComp', bubbleStep.comparisons);
+        bump('bubbleSwap', bubbleStep.swaps);
         document.getElementById('bubbleDone').textContent = finishLabel(idx, bubbleSteps.length);
         document.getElementById('bubbleFinish').textContent =
           'Rank ' + finishRank(bubbleSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +
@@ -269,8 +276,8 @@
 
         document.getElementById('selectionNarration').textContent = selectionStep.action;
         document.getElementById('selectionStep').textContent = (Math.min(idx, selectionSteps.length - 1) + 1) + ' / ' + selectionSteps.length;
-        document.getElementById('selectionComp').textContent = selectionStep.comparisons;
-        document.getElementById('selectionSwap').textContent = selectionStep.swaps;
+        bump('selectionComp', selectionStep.comparisons);
+        bump('selectionSwap', selectionStep.swaps);
         document.getElementById('selectionDone').textContent = finishLabel(idx, selectionSteps.length);
         document.getElementById('selectionFinish').textContent =
           'Rank ' + finishRank(selectionSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +
@@ -278,8 +285,8 @@
 
         document.getElementById('insertionNarration').textContent = insertionStep.action;
         document.getElementById('insertionStep').textContent = (Math.min(idx, insertionSteps.length - 1) + 1) + ' / ' + insertionSteps.length;
-        document.getElementById('insertionComp').textContent = insertionStep.comparisons;
-        document.getElementById('insertionShift').textContent = insertionStep.shifts;
+        bump('insertionComp', insertionStep.comparisons);
+        bump('insertionShift', insertionStep.shifts);
         document.getElementById('insertionDone').textContent = finishLabel(idx, insertionSteps.length);
         document.getElementById('insertionFinish').textContent =
           'Rank ' + finishRank(insertionSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +

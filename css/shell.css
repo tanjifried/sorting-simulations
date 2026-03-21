@@ -1119,3 +1119,210 @@ body[data-present] .sim-layout {
     gap: 1.25rem;
   }
 }
+
+/* ── POLISH: Interactive element cursors ── */
+button,
+.topnav-link,
+.step-item,
+label[for],
+.collapse-btn,
+.tile-action-btn,
+.tile-empty-trigger,
+.tile-picker-option,
+.shortcut-close,
+.help-btn,
+.fullscreen-btn,
+.fullscreen-exit-fab {
+  cursor: pointer;
+}
+
+button:disabled,
+.tile-picker-option:disabled,
+.tile-picker-option.disabled {
+  cursor: not-allowed;
+}
+
+input[type="range"] {
+  cursor: ew-resize;
+}
+
+/* ── POLISH: Hover states ── */
+.topnav-link:not(.active):hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.control-button:not(.accent):hover,
+.pill-btn:not(.active):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.control-button.accent:hover,
+.pill-btn.active:hover,
+.present-btn:hover {
+  filter: brightness(1.12);
+}
+
+.collapse-btn:hover,
+.tile-action-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tile-empty-trigger:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
+}
+
+.tile-picker-option:not(:disabled):not(.disabled):hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+
+.step-item:hover {
+  border-color: var(--accent);
+}
+
+/* ── POLISH: Focus rings (keyboard nav) ── */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── POLISH: Narration text transitions ── */
+.narration-banner {
+  transition: color 220ms ease;
+}
+
+/* ── POLISH: Stats value pop animation ── */
+@keyframes stat-bump {
+  0%   { transform: scale(1);    color: inherit; }
+  40%  { transform: scale(1.22); color: var(--accent); }
+  100% { transform: scale(1);    color: inherit; }
+}
+
+.stat b {
+  display: block;
+}
+
+.stat b.bumped {
+  animation: stat-bump 220ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── POLISH: Canvas container inside tile-body fills the tile ── */
+.tile-body .canvas-container {
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  border-radius: 14px;
+  border: none;
+  margin: 0;
+}
+
+/* ── POLISH: Narration inside tile has no top margin ── */
+.tile-body .narration-banner {
+  margin-top: 0;
+}
+
+/* ── POLISH: Stats row inside tile has no top margin ── */
+.tile-body .stats-row {
+  margin-top: 0;
+}
+
+/* ── POLISH: Code note styling ── */
+.code-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  padding: 0.4rem 0.55rem;
+  border-left: 2px solid var(--border);
+  line-height: 1.5;
+  transition: color 200ms ease, border-color 200ms ease;
+}
+
+/* ── POLISH: Custom scrollbars (webkit) ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* ── POLISH: Active code line left accent bar ── */
+.code-line.active {
+  border-left: 3px solid var(--accent);
+  padding-left: calc(0.55rem - 3px);
+}
+
+/* ── POLISH: Tile card hover glow ── */
+.tile-card:not(.empty):focus-within {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* ── POLISH: Gutter hover highlight ── */
+.tile-gutter:hover,
+.tile-gutter:active {
+  opacity: 1;
+  background: var(--accent);
+}
+
+/* ── POLISH: Smooth panel collapse transition ── */
+.left-panel,
+.right-panel {
+  transition: padding 180ms ease;
+}
+
+/* ── POLISH: Shortcut kbd visual polish ── */
+kbd {
+  box-shadow: 0 2px 0 var(--border);
+  white-space: nowrap;
+}
+
+/* ── POLISH: Compare lane done badge polish ── */
+.compare-lane.lane-done::after {
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── POLISH: Topnav right gap ── */
+.topnav-right {
+  gap: 0.5rem;
+}
+
+/* ── POLISH: Empty tile trigger text style ── */
+.tile-empty-trigger b {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ── POLISH: Stat label truncation ── */
+.stat-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}

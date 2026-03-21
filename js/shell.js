@@ -1113,12 +1113,21 @@
     }
   }
 
+  function bumpStatEl(el) {
+    if (!el) return;
+    el.classList.remove('bumped');
+    void el.offsetWidth;
+    el.classList.add('bumped');
+    window.setTimeout(function () { el.classList.remove('bumped'); }, 240);
+  }
+
   window.SortLabShell = {
     registerPageRuntime: registerPageRuntime,
     toggleShortcutOverlay: toggleShortcutOverlay,
     toggleFullscreen: toggleFullscreen,
     dispatchResize: dispatchSyntheticResize,
     togglePanel: togglePanel,
+    bumpStat: bumpStatEl,
   };
 
   buildShell();
