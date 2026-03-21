@@ -216,7 +216,9 @@
     ].join('');
 
     overlay.addEventListener('click', function (event) {
-      if (event.target === overlay || event.target.classList.contains('shortcut-close')) {
+      var target = event.target;
+      var hitClose = !!(target && target.closest && target.closest('.shortcut-close'));
+      if (target === overlay || hitClose) {
         toggleShortcutOverlay(false);
       }
     });
@@ -341,12 +343,14 @@
       var runtime = shellState.runtime;
       var controls = runtime && runtime.controls;
       var key = event.key;
+      var overlay = shellState.shortcutOverlay;
+      var overlayOpen = !!(overlay && !overlay.hidden);
 
       if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) {
         return;
       }
 
-      if (key === 'Escape' && !shellState.shortcutOverlay.hidden) {
+      if ((key === 'Escape' || key === 'Esc') && overlayOpen) {
         toggleShortcutOverlay(false);
         event.preventDefault();
         return;
@@ -368,8 +372,7 @@
         return;
       }
 
-      if (!shellState.shortcutOverlay.hidden) {
-        event.preventDefault();
+      if (overlayOpen) {
         return;
       }
 
