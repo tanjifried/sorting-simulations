@@ -162,23 +162,57 @@
         var usableW = p.width - paddingSides * 2;
         var barW = (usableW - barGap * (bars.length - 1)) / bars.length;
 
-        for (var i = 0; i < bars.length; i += 1) {
+        // 1. Determine draw order: Back bar, then Neutral bars, then Front bar
+        var drawOrder = [];
+        for (var k = 0; k < bars.length; k++) drawOrder.push(k);
+
+        if (animating && swapState) {
+          drawOrder = [];
+          // Back bar first
+          drawOrder.push(swapState.right);
+          // All others
+          for (var k = 0; k < bars.length; k++) {
+            if (k !== swapState.left && k !== swapState.right) drawOrder.push(k);
+          }
+          // Front bar last
+          drawOrder.push(swapState.left);
+        }
+
+        // 2. Render according to order
+        for (var j = 0; j < drawOrder.length; j += 1) {
+          var i = drawOrder[j];
           var targetH = (bars[i].value / maxVal) * (p.height - paddingTop - paddingBottom);
           bars[i].displayH = p.lerp(bars[i].displayH, targetH, lerpSpeed);
 
           var x = paddingSides + i * (barW + barGap);
           var y = p.height - paddingBottom - bars[i].displayH;
           var alpha = 255;
+          var scale = 1.0;
+          var brightness = 1.0;
 
           if (animating && swapState && (i === swapState.left || i === swapState.right)) {
-            var rise = easeInOut(phaseProgress(animFrame, 0, SWAP_FRAMES * 0.3));
-            var cross = easeInOut(phaseProgress(animFrame, SWAP_FRAMES * 0.2, SWAP_FRAMES * 0.8));
-            var settle = easeInOut(phaseProgress(animFrame, SWAP_FRAMES * 0.7, SWAP_FRAMES));
+            var t = animFrame / SWAP_FRAMES;
+            var depth = Math.sin(t * Math.PI); // 0 -> 1 -> 0
+
+            // Horizontal Slide
+            var xEase = t * t * (3 - 2 * t); // Smooth ease
             var swapTargetIndex = i === swapState.left ? swapState.right : swapState.left;
+            var startX = paddingSides + i * (barW + barGap);
             var targetX = paddingSides + swapTargetIndex * (barW + barGap);
-            x = p.lerp(x, targetX, cross);
-            y -= 40 * rise;
-            y += 40 * settle;
+            x = p.lerp(startX, targetX, xEase);
+
+            if (i === swapState.left) {
+              // Hover to Front
+              scale = 1 + depth * 0.15;
+              y -= depth * 20; // Lift up
+              brightness = 1 + depth * 0.2;
+            } else {
+              // Sink to Back
+              scale = 1 - depth * 0.15;
+              y += depth * 10; // Sink down
+              brightness = 1 - depth * 0.3;
+              alpha = 255 * (1 - depth * 0.4);
+            }
           } else if (pulseState && pulseState.indices.indexOf(i) !== -1) {
             var pulseT = pulseState.frame / Math.max(1, PULSE_FRAMES - 1);
             var pulseStrength = pulseT < 0.5 ? pulseT * 2 : (1 - pulseT) * 2;
@@ -186,12 +220,23 @@
           }
 
           p.noStroke();
-          var fillColor = p.color(stateColor(bars[i].state));
-          p.fill(fillColor.levels[0], fillColor.levels[1], fillColor.levels[2], alpha);
-          p.rect(x, y, barW, bars[i].displayH, 4, 4, 0, 0);
+          var baseColor = p.color(stateColor(bars[i].state));
+          p.fill(
+            clamp(baseColor.levels[0] * brightness, 0, 255),
+            clamp(baseColor.levels[1] * brightness, 0, 255),
+            clamp(baseColor.levels[2] * brightness, 0, 255),
+            alpha
+          );
+          
+          var finalW = barW * scale;
+          var finalH = bars[i].displayH * scale;
+          var xAdjust = (barW - finalW) / 2;
+          var yAdjust = (bars[i].displayH - finalH);
+          
+          p.rect(x + xAdjust, y + yAdjust, finalW, finalH, 4 * scale, 4 * scale, 0, 0);
 
-          p.fill(textColor[0], textColor[1], textColor[2]);
-          p.textSize(10);
+          p.fill(textColor[0], textColor[1], textColor[2], alpha);
+          p.textSize(10 * scale);
           p.textAlign(p.CENTER, p.TOP);
           p.text(bars[i].label, x + barW / 2, p.height - paddingBottom + 12);
         }
