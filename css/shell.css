@@ -779,6 +779,31 @@ body.fullscreen-nav-hidden .topnav {
   opacity: 0.45;
 }
 
+.fullscreen-exit-fab {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.65rem 0.95rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--surface);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.fullscreen-exit-fab[hidden] {
+  display: none;
+}
+
+body:not(.is-fullscreen) .fullscreen-exit-fab {
+  display: none;
+}
+
 body.is-fullscreen .page-wrapper {
   max-width: none;
   min-height: 100vh;

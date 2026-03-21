@@ -14,12 +14,71 @@
     runtime: null,
     shortcutOverlay: null,
     nav: null,
+    fullscreenButton: null,
+    fullscreenExitButton: null,
     fullscreenTimer: null,
     navHidden: false,
   };
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
+  }
+
+  function getFullscreenElement() {
+    return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
+  }
+
+  function requestFullscreenMode(element) {
+    if (!element) {
+      return null;
+    }
+    if (element.requestFullscreen) {
+      return element.requestFullscreen();
+    }
+    if (element.webkitRequestFullscreen) {
+      return element.webkitRequestFullscreen();
+    }
+    if (element.msRequestFullscreen) {
+      return element.msRequestFullscreen();
+    }
+    return null;
+  }
+
+  function exitFullscreenMode() {
+    if (document.exitFullscreen) {
+      return document.exitFullscreen();
+    }
+    if (document.webkitExitFullscreen) {
+      return document.webkitExitFullscreen();
+    }
+    if (document.msExitFullscreen) {
+      return document.msExitFullscreen();
+    }
+    return null;
+  }
+
+  function isCoarsePointerDevice() {
+    if (!window.matchMedia) {
+      return false;
+    }
+
+    var coarse = window.matchMedia('(pointer: coarse)').matches;
+    var hoverNone = window.matchMedia('(hover: none)').matches;
+    var anyFine = window.matchMedia('(any-pointer: fine)').matches;
+    return coarse && hoverNone && !anyFine;
+  }
+
+  function syncFullscreenControls() {
+    var isFullscreen = !!getFullscreenElement();
+    if (shellState.fullscreenButton) {
+      shellState.fullscreenButton.innerHTML = isFullscreen
+        ? '<span aria-hidden="true">×</span> Exit Fullscreen'
+        : '<span aria-hidden="true">⛶</span> Fullscreen';
+      shellState.fullscreenButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
+    }
+    if (shellState.fullscreenExitButton) {
+      shellState.fullscreenExitButton.hidden = !isFullscreen;
+    }
   }
 
   function currentFile() {
@@ -187,28 +246,33 @@
       shellState.fullscreenTimer = null;
     }
 
-    if (!document.fullscreenElement) {
+    if (!getFullscreenElement()) {
       updateFullscreenNavVisibility(false);
       return;
     }
 
     updateFullscreenNavVisibility(false);
+    if (isCoarsePointerDevice()) {
+      return;
+    }
+
     shellState.fullscreenTimer = window.setTimeout(function () {
       updateFullscreenNavVisibility(true);
     }, FULLSCREEN_HIDE_DELAY);
   }
 
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      return document.documentElement.requestFullscreen();
+    if (!getFullscreenElement()) {
+      return requestFullscreenMode(document.documentElement);
     }
-    return document.exitFullscreen();
+    return exitFullscreenMode();
   }
 
   function installFullscreenBehavior() {
-    document.addEventListener('fullscreenchange', function () {
-      document.body.classList.toggle('is-fullscreen', !!document.fullscreenElement);
-      if (!document.fullscreenElement) {
+    function handleFullscreenChange() {
+      var isFullscreen = !!getFullscreenElement();
+      document.body.classList.toggle('is-fullscreen', isFullscreen);
+      if (!isFullscreen) {
         if (shellState.fullscreenTimer) {
           window.clearTimeout(shellState.fullscreenTimer);
           shellState.fullscreenTimer = null;
@@ -217,17 +281,31 @@
       } else {
         resetFullscreenHideTimer();
       }
+      syncFullscreenControls();
       dispatchSyntheticResize(0);
-    });
+    }
 
-    document.addEventListener('mousemove', function (event) {
-      if (!document.fullscreenElement) {
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    function wakeFullscreenNav(event) {
+      if (!getFullscreenElement()) {
         return;
       }
+
+      if (!event || typeof event.clientY !== 'number') {
+        resetFullscreenHideTimer();
+        return;
+      }
+
       if (event.clientY <= 60 || !shellState.navHidden) {
         resetFullscreenHideTimer();
       }
-    });
+    }
+
+    document.addEventListener('mousemove', wakeFullscreenNav);
+    document.addEventListener('pointerdown', wakeFullscreenNav);
+    document.addEventListener('touchstart', wakeFullscreenNav);
   }
 
   function togglePanel(side) {
@@ -270,6 +348,12 @@
 
       if (key === 'Escape' && !shellState.shortcutOverlay.hidden) {
         toggleShortcutOverlay(false);
+        event.preventDefault();
+        return;
+      }
+
+      if (key === 'Escape' && getFullscreenElement()) {
+        exitFullscreenMode();
         event.preventDefault();
         return;
       }
@@ -411,10 +495,25 @@
     var fullscreenBtn = document.createElement('button');
     fullscreenBtn.className = 'present-btn fullscreen-btn';
     fullscreenBtn.type = 'button';
-    fullscreenBtn.innerHTML = '<span aria-hidden="true">⛶</span> Fullscreen';
+    fullscreenBtn.setAttribute('aria-pressed', 'false');
     fullscreenBtn.addEventListener('click', function () {
       toggleFullscreen();
     });
+    shellState.fullscreenButton = fullscreenBtn;
+
+    var fullscreenExitButton = document.createElement('button');
+    fullscreenExitButton.className = 'fullscreen-exit-fab';
+    fullscreenExitButton.type = 'button';
+    fullscreenExitButton.hidden = true;
+    fullscreenExitButton.setAttribute('aria-label', 'Exit fullscreen');
+    fullscreenExitButton.textContent = 'Exit Fullscreen';
+    fullscreenExitButton.addEventListener('click', function () {
+      if (getFullscreenElement()) {
+        exitFullscreenMode();
+      }
+    });
+    shellState.fullscreenExitButton = fullscreenExitButton;
+    document.body.appendChild(fullscreenExitButton);
 
     var helpBtn = document.createElement('button');
     helpBtn.className = 'pill-btn help-btn';
@@ -435,6 +534,7 @@
       document.body.insertBefore(stepper, document.body.firstChild);
     }
     document.body.insertBefore(nav, document.body.firstChild);
+    syncFullscreenControls();
     buildShortcutOverlay();
   }
 
