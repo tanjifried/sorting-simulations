@@ -42,13 +42,18 @@ code {
 .compare-callout,
 .table-card,
 .left-panel,
-.center-panel,
 .right-panel,
 .how-section,
 .compare-lane,
 .summary-card {
   border: 1px solid var(--border);
   background: var(--surface);
+}
+
+/* center-panel is a transparent layout container — no card chrome */
+.center-panel {
+  background: transparent;
+  border: none;
 }
 
 .topnav {
@@ -240,7 +245,6 @@ select {
 .table-card,
 .feature-card,
 .left-panel,
-.center-panel,
 .right-panel,
 .how-section,
 .compare-lane,
@@ -254,7 +258,6 @@ select {
 .table-card,
 .feature-card,
 .left-panel,
-.center-panel,
 .right-panel,
 .how-section,
 .compare-lane {
@@ -331,17 +334,17 @@ select {
 
 .sim-layout {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 360px;
-  gap: 1.25rem;
+  grid-template-columns: 260px minmax(0, 1fr) 340px;
+  gap: 1rem;
   align-items: start;
 }
 
 .sim-layout.left-collapsed {
-  grid-template-columns: 48px minmax(0, 1fr) 360px;
+  grid-template-columns: 48px minmax(0, 1fr) 340px;
 }
 
 .sim-layout.right-collapsed {
-  grid-template-columns: 280px minmax(0, 1fr) 48px;
+  grid-template-columns: 260px minmax(0, 1fr) 48px;
 }
 
 .sim-layout.left-collapsed.right-collapsed {
@@ -516,6 +519,7 @@ input[type="range"] {
 .center-panel {
   display: grid;
   min-width: 0;
+  padding: 0;
 }
 
 .tile-workspace {
@@ -525,7 +529,7 @@ input[type="range"] {
   display: grid;
   grid-template-columns: var(--tile-cols);
   grid-template-rows: var(--tile-rows);
-  gap: 0.75rem;
+  gap: 0.85rem;
   min-height: 560px;
   align-content: stretch;
 }
@@ -540,6 +544,7 @@ input[type="range"] {
   border-radius: 22px;
   background: var(--surface);
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
 .tile-card.empty {
@@ -548,14 +553,15 @@ input[type="range"] {
 }
 
 .tile-header {
-  height: 28px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0 0.65rem;
+  padding: 0 0.85rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
+  border-radius: 22px 22px 0 0;
 }
 
 .tile-label {
@@ -594,7 +600,7 @@ input[type="range"] {
 
 .tile-body {
   min-height: 0;
-  padding: 0.85rem;
+  padding: 1rem;
   overflow: hidden;
 }
 
@@ -1325,4 +1331,56 @@ kbd {
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+}
+
+/* ── VERSION TAG ── */
+.topnav-brand-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  line-height: 1;
+}
+
+.topnav-version {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+
+/* ── SPLIT BUTTON ICON ── */
+.split-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.split-btn svg {
+  display: block;
+}
+
+.split-btn:disabled svg {
+  opacity: 0.35;
+}
+
+/* ── TILE CARD HOVER BORDER ── */
+.tile-card:not(.empty):hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  transition: border-color 180ms ease;
+}
+
+/* ── EMPTY TILE - cleaner center layout ── */
+.tile-empty-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+/* ── TILE BODY - compare stack fills tile ── */
+.tile-body .compare-stack {
+  overflow-y: auto;
 }

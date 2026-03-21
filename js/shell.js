@@ -456,9 +456,19 @@
     nav.className = 'topnav';
     shellState.nav = nav;
 
-    var brand = document.createElement('span');
-    brand.className = 'topnav-brand';
-    brand.textContent = 'Sort Lab';
+    var brand = document.createElement('div');
+    brand.className = 'topnav-brand-wrap';
+
+    var brandName = document.createElement('span');
+    brandName.className = 'topnav-brand';
+    brandName.textContent = 'Sort Lab';
+
+    var brandVersion = document.createElement('span');
+    brandVersion.className = 'topnav-version';
+    brandVersion.textContent = 'v1.1.0';
+
+    brand.appendChild(brandName);
+    brand.appendChild(brandVersion);
     nav.appendChild(brand);
 
     var center = document.createElement('div');
@@ -763,8 +773,13 @@
         body.appendChild(workspace.contents[content].node);
       }
 
+      // Fire onTileContentMounted after a microtask so the new DOM is painted
+      // and any content (code trace, stats) renders into visible dimensions.
       if (workspace.runtime && typeof workspace.runtime.onTileContentMounted === 'function') {
-        workspace.runtime.onTileContentMounted(content, body);
+        var runtime = workspace.runtime;
+        window.setTimeout(function () {
+          runtime.onTileContentMounted(content, body);
+        }, 0);
       }
     }
 
@@ -1010,6 +1025,10 @@
       workspace.root.style.setProperty('--tile-cols', buildTrackTemplate(workspace.layout.colSizes, 200));
       workspace.root.style.setProperty('--tile-rows', buildTrackTemplate(workspace.layout.rowSizes, 160));
 
+      // Collect deferred content-attach tasks — run after all tiles are in the
+      // DOM so p5.js can measure offsetWidth for canvas sizing.
+      var deferredAttach = [];
+
       workspace.layout.tiles.forEach(function (tile) {
         var tileEl = document.createElement('section');
         tileEl.className = 'tile-card';
@@ -1024,9 +1043,11 @@
           emptyBtn.className = 'tile-empty-trigger';
           emptyBtn.type = 'button';
           emptyBtn.innerHTML = '<span>+</span><b>Add panel</b>';
-          emptyBtn.addEventListener('click', function () {
-            openPicker(tile, tileEl);
-          });
+          (function (t, el) {
+            emptyBtn.addEventListener('click', function () {
+              openPicker(t, el);
+            });
+          }(tile, tileEl));
           tileEl.appendChild(emptyBtn);
         } else {
           var header = document.createElement('div');
@@ -1041,22 +1062,24 @@
 
           var splitBtn = document.createElement('button');
           splitBtn.type = 'button';
-          splitBtn.className = 'tile-action-btn';
-          splitBtn.textContent = '⊞';
+          splitBtn.className = 'tile-action-btn split-btn';
+          splitBtn.title = 'Add panel alongside';
+          splitBtn.setAttribute('aria-label', 'Split: add panel alongside');
+          splitBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.75" y="0.75" width="3.5" height="9.5" rx="0.75" stroke="currentColor" stroke-width="1.25"/><rect x="6.75" y="0.75" width="3.5" height="9.5" rx="0.75" stroke="currentColor" stroke-width="1.25"/></svg>';
           splitBtn.disabled = workspace.layout.tiles.length >= 6;
-          splitBtn.addEventListener('click', function () {
-            splitTile(tile.id);
-          });
+          (function (id) {
+            splitBtn.addEventListener('click', function () { splitTile(id); });
+          }(tile.id));
 
           var clearBtn = document.createElement('button');
           clearBtn.type = 'button';
           clearBtn.className = 'tile-action-btn';
-          clearBtn.textContent = '×';
+          clearBtn.innerHTML = '&times;';
           clearBtn.title = 'Remove panel';
           clearBtn.setAttribute('aria-label', 'Remove this panel');
-          clearBtn.addEventListener('click', function () {
-            clearTile(tile.id);
-          });
+          (function (id) {
+            clearBtn.addEventListener('click', function () { clearTile(id); });
+          }(tile.id));
 
           actions.appendChild(splitBtn);
           actions.appendChild(clearBtn);
@@ -1067,14 +1090,25 @@
           var body = document.createElement('div');
           body.className = 'tile-body';
           tileEl.appendChild(body);
-          attachContent(tile, body);
+
+          // Defer until after all tiles are appended to the live DOM
+          deferredAttach.push({ tile: tile, body: body });
         }
 
         workspace.root.appendChild(tileEl);
       });
 
       renderGutters();
+
+      // All tiles are now in the DOM — mount p5 canvases and other content.
+      deferredAttach.forEach(function (item) {
+        attachContent(item.tile, item.body);
+      });
+
+      // Two-pass resize: immediate for grid layout, then short delay so p5
+      // setup() can re-measure the container after paint.
       dispatchSyntheticResize(0);
+      dispatchSyntheticResize(80);
     }
 
     workspace.saveLayout = saveLayout;
@@ -1110,6 +1144,7 @@
       runtime.codeLanguageEl = runtime.codeLanguageEl || (shellState.workspace && shellState.workspace.codeLanguageEl) || null;
       shellState.workspace.remountVisualizer();
       dispatchSyntheticResize(0);
+      dispatchSyntheticResize(80);
     }
   }
 
