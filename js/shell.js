@@ -217,8 +217,10 @@
 
     overlay.addEventListener('click', function (event) {
       var target = event.target;
+      var modal = overlay.querySelector('.shortcut-modal');
+      var hitModal = !!(modal && (target === modal || modal.contains(target)));
       var hitClose = !!(target && target.closest && target.closest('.shortcut-close'));
-      if (target === overlay || hitClose) {
+      if (hitModal || hitClose) {
         toggleShortcutOverlay(false);
       }
     });
