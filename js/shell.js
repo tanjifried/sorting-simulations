@@ -175,6 +175,9 @@
       var collapsed = panel.classList.toggle('collapsed');
       layout.classList.toggle(className, collapsed);
       button.textContent = collapsed ? collapsedText : expandedText;
+      setTimeout(function () {
+        window.dispatchEvent(new Event('resize'));
+      }, 220);
     });
   }
 

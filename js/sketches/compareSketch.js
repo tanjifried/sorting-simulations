@@ -1,22 +1,24 @@
 (function () {
-  var DEFAULT_COLOR = '#475569';
-  var COMPARE_COLOR = '#f59e0b';
-  var SWAP_COLOR = '#f43f5e';
-  var SORTED_COLOR = '#10b981';
-  var NOSWAP_COLOR = '#8b5cf6';
-  var MIN_COLOR = '#f97316';
-  var KEY_COLOR = '#38bdf8';
-  var SHIFT_COLOR = '#a855f7';
+  function getCSSVar(name) {
+    return getComputedStyle(document.body).getPropertyValue(name).trim();
+  }
+
+  function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(function (c) { return c + c; }).join('');
+    var n = parseInt(hex, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
 
   function stateColor(state) {
-    if (state === 'compare') return COMPARE_COLOR;
-    if (state === 'swap') return SWAP_COLOR;
-    if (state === 'sorted') return SORTED_COLOR;
-    if (state === 'noswap') return NOSWAP_COLOR;
-    if (state === 'min') return MIN_COLOR;
-    if (state === 'key') return KEY_COLOR;
-    if (state === 'shift') return SHIFT_COLOR;
-    return DEFAULT_COLOR;
+    if (state === 'compare') return getCSSVar('--bar-compare');
+    if (state === 'swap') return getCSSVar('--bar-swap');
+    if (state === 'sorted') return getCSSVar('--bar-sorted');
+    if (state === 'noswap') return getCSSVar('--bar-noswap');
+    if (state === 'min') return getCSSVar('--bar-min');
+    if (state === 'key') return getCSSVar('--bar-key');
+    if (state === 'shift') return getCSSVar('--bar-shift');
+    return getCSSVar('--bar-default');
   }
 
   function stateForAlgorithm(index, step, algorithm) {
@@ -65,7 +67,9 @@
       };
 
       p.draw = function () {
-        p.background(15, 17, 23);
+        var bg = hexToRgb(getCSSVar('--surface-2'));
+        var textColor = hexToRgb(getCSSVar('--muted'));
+        p.background(bg[0], bg[1], bg[2]);
         if (!bars.length) return;
 
         var usableW = p.width - paddingSides * 2;
@@ -82,7 +86,7 @@
           p.fill(stateColor(bars[i].state));
           p.rect(x, y, barW, bars[i].displayH, 4, 4, 0, 0);
 
-          p.fill(100, 116, 139);
+          p.fill(textColor[0], textColor[1], textColor[2]);
           p.textSize(10);
           p.textAlign(p.CENTER, p.TOP);
           p.text(bars[i].label, x + barW / 2, p.height - paddingBottom + 8);
