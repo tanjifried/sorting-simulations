@@ -802,6 +802,24 @@
 
       var picker = document.createElement('div');
       picker.className = 'tile-picker';
+      
+      var pickerHeader = document.createElement('div');
+      pickerHeader.className = 'tile-picker-header';
+      var pickerTitle = document.createElement('span');
+      pickerTitle.textContent = 'Add Panel';
+      var pickerClose = document.createElement('button');
+      pickerClose.type = 'button';
+      pickerClose.className = 'tile-picker-close';
+      pickerClose.textContent = '×';
+      pickerClose.setAttribute('aria-label', 'Close picker');
+      pickerClose.addEventListener('click', function () {
+        picker.remove();
+        document.removeEventListener('click', closePicker);
+      });
+      pickerHeader.appendChild(pickerTitle);
+      pickerHeader.appendChild(pickerClose);
+      picker.appendChild(pickerHeader);
+      
       var used = usedContents();
 
       Object.keys(workspace.contents).forEach(function (key) {

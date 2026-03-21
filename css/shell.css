@@ -620,7 +620,7 @@ input[type="range"] {
   inset: 0.75rem;
   z-index: 10;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-content: center;
   justify-content: center;
   gap: 0.55rem;
@@ -629,6 +629,37 @@ input[type="range"] {
   border-radius: 18px;
   background: color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter: blur(10px);
+}
+
+.tile-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tile-picker-close {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tile-picker-close:hover {
+  background: var(--surface-3);
 }
 
 .tile-picker-option {
