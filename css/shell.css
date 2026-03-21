@@ -514,7 +514,284 @@ input[type="range"] {
 }
 
 .center-panel {
+  display: grid;
   min-width: 0;
+}
+
+.tile-workspace {
+  --tile-cols: minmax(200px, 1fr);
+  --tile-rows: minmax(160px, 1fr);
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--tile-cols);
+  grid-template-rows: var(--tile-rows);
+  gap: 0.75rem;
+  min-height: 560px;
+  align-content: stretch;
+}
+
+.tile-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 160px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.tile-card.empty {
+  display: block;
+  min-height: 160px;
+}
+
+.tile-header {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.65rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.tile-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tile-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.tile-action-btn,
+.tile-empty-trigger,
+.tile-picker-option,
+.shortcut-close,
+.help-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.tile-action-btn {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.tile-body {
+  min-height: 0;
+  padding: 0.85rem;
+  overflow: hidden;
+}
+
+.tile-empty-trigger {
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  border-radius: 22px;
+  border-style: dashed;
+  display: grid;
+  place-items: center;
+  gap: 0.4rem;
+  font-family: 'DM Mono', monospace;
+}
+
+.tile-empty-trigger span {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.tile-picker {
+  position: absolute;
+  inset: 0.75rem;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.tile-picker-option {
+  border-radius: 999px;
+  padding: 0.55rem 0.85rem;
+}
+
+.tile-picker-option.disabled,
+.tile-picker-option:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.tile-gutter {
+  position: absolute;
+  z-index: 6;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 40%, var(--surface-2));
+  opacity: 0.7;
+}
+
+.tile-gutter-col {
+  width: 6px;
+  cursor: col-resize;
+}
+
+.tile-gutter-row {
+  height: 6px;
+  cursor: row-resize;
+}
+
+.code-tile-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.code-tile-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.tile-body .code-trace-container,
+.tile-body .compare-stack,
+.tile-body .how-section {
+  height: 100%;
+}
+
+.tile-body .how-section {
+  margin-top: 0;
+}
+
+.shortcut-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+}
+
+.shortcut-modal {
+  width: min(760px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.shortcut-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-family: 'DM Mono', monospace;
+}
+
+.shortcut-close {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  padding: 0;
+}
+
+.shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  padding: 1.25rem;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface-2);
+}
+
+kbd {
+  min-width: 2.2rem;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.tok-kw { color: var(--tok-kw); }
+.tok-type { color: var(--tok-type); }
+.tok-fn { color: var(--tok-fn); }
+.tok-var { color: var(--tok-var); }
+.tok-num { color: var(--tok-num); }
+.tok-op { color: var(--tok-op); }
+.tok-punct { color: var(--tok-punct); }
+.tok-comment { color: var(--tok-comment); font-style: italic; }
+.tok-str { color: var(--tok-str); }
+
+body.is-fullscreen .progress-stepper {
+  display: none !important;
+}
+
+body.is-fullscreen .topnav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  min-height: 40px;
+  padding: 0.45rem 1rem;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+body.fullscreen-nav-hidden .topnav {
+  transform: translateY(calc(-100% + 6px));
+  opacity: 0.45;
+}
+
+body.is-fullscreen .page-wrapper {
+  max-width: none;
+  min-height: 100vh;
+  padding: 4.25rem 0.75rem 0.75rem;
+}
+
+body.is-fullscreen .sim-layout {
+  min-height: calc(100vh - 5rem);
+}
+
+body.is-fullscreen .center-panel,
+body.is-fullscreen .tile-workspace {
+  min-height: calc(100vh - 6.25rem);
 }
 
 .code-trace-container {
@@ -757,6 +1034,25 @@ body[data-present] .sim-layout {
   .legend-row {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .shortcut-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tile-workspace {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: none !important;
+    grid-auto-rows: minmax(160px, auto);
+  }
+
+  .tile-card {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+
+  .tile-gutter {
+    display: none;
   }
 
   .compare-callout {

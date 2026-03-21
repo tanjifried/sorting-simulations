@@ -118,22 +118,23 @@
     let steps = InsertionAlgorithm.computeSteps(currentArray);
     let currentStep = steps[0];
 
-    const sketch = mountSketch('sketchContainer', 'insertion');
+    let sketch = mountSketch('sketchContainer', 'insertion');
     const codeTrace = initCodeTrace({
       container: document.getElementById('codeTraceContainer'),
       codeStrings: InsertionAlgorithm.codeStrings,
-      lineMap: InsertionAlgorithm.lineMap,
     });
 
     function renderCodeForStep(step) {
       const lang = document.getElementById('codeLanguage').value;
-      codeTrace.render(lang, step.type);
+      codeTrace.render(lang, step);
       document.getElementById('codeNote').textContent =
         'Tracking ' + lang + ' code for the "' + step.type + '" step.';
     }
 
-    initControls({
-      sketch,
+    const controls = initControls({
+      getSketch: function () {
+        return sketch;
+      },
       initialArray: currentArray,
       getSteps: function () {
         return steps;
@@ -168,6 +169,38 @@
       patternEl: document.getElementById('patternSelect'),
       regenerateBtn: document.getElementById('regenerateBtn'),
       speedValueEl: document.getElementById('speedValue'),
+    });
+
+    SortLabShell.registerPageRuntime({
+      controls: controls,
+      codeLanguageEl: document.getElementById('codeLanguage'),
+      mountVisualizer: function (target) {
+        if (sketch && typeof sketch.destroy === 'function') {
+          sketch.destroy();
+        } else if (sketch && typeof sketch.remove === 'function') {
+          sketch.remove();
+        }
+        sketch = mountSketch(target, 'insertion');
+        if (sketch && typeof sketch.resetBars === 'function') {
+          sketch.resetBars(currentArray);
+        }
+        if (currentStep && sketch && typeof sketch.applyStep === 'function') {
+          sketch.applyStep(currentStep);
+        }
+      },
+      unmountVisualizer: function () {
+        if (sketch && typeof sketch.destroy === 'function') {
+          sketch.destroy();
+        } else if (sketch && typeof sketch.remove === 'function') {
+          sketch.remove();
+        }
+        sketch = null;
+      },
+      onTileContentMounted: function (content) {
+        if (content === 'code' && currentStep) {
+          renderCodeForStep(currentStep);
+        }
+      },
     });
 
     document.getElementById('codeLanguage').addEventListener('change', function () {

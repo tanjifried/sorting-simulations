@@ -63,7 +63,6 @@
   }
 
   function initControls(options) {
-    var sketch = options.sketch;
     var getSteps = options.getSteps;
     var setSteps = options.setSteps;
     var buildSteps = options.buildSteps;
@@ -87,6 +86,26 @@
     var stepIndex = 0;
     var timer = null;
     var isPlaying = false;
+    var queuedAutoAdvance = 0;
+    var queuedManualAdvance = 0;
+
+    function getSketch() {
+      if (typeof options.getSketch === 'function') {
+        return options.getSketch();
+      }
+      return options.sketch;
+    }
+
+    function isAnimating() {
+      return !!window.sortLabAnimating;
+    }
+
+    function clearTimer() {
+      if (timer) {
+        window.clearTimeout(timer);
+        timer = null;
+      }
+    }
 
     function getInterval() {
       return clamp(Number(speedEl.value) || 300, 10, 1000);
@@ -105,6 +124,7 @@
         speedValueEl.textContent = interval + ' ms';
       }
       syncPresetButtons();
+      var sketch = getSketch();
       if (sketch && typeof sketch.setLerpSpeed === 'function') {
         sketch.setLerpSpeed(intervalToLerp(interval));
       }
@@ -122,17 +142,16 @@
 
     function stopPlayback() {
       isPlaying = false;
-      if (timer) {
-        window.clearTimeout(timer);
-        timer = null;
-      }
+      queuedAutoAdvance = 0;
+      clearTimer();
     }
 
     function syncButtons() {
       var steps = getSteps();
       var last = Math.max(0, steps.length - 1);
-      backBtn.disabled = stepIndex <= 0;
-      nextBtn.disabled = stepIndex >= last;
+      var blocked = isAnimating();
+      backBtn.disabled = blocked || stepIndex <= 0;
+      nextBtn.disabled = blocked || stepIndex >= last;
       pauseBtn.disabled = !isPlaying;
       playBtn.disabled = isPlaying;
     }
@@ -144,6 +163,8 @@
       }
 
       stepIndex = clamp(stepIndex, 0, steps.length - 1);
+
+      var sketch = getSketch();
 
       if (forceResetBars && sketch && typeof sketch.resetBars === 'function') {
         sketch.resetBars(currentArray);
@@ -160,6 +181,8 @@
     }
 
     function scheduleNext() {
+      clearTimer();
+
       if (!isPlaying) {
         return;
       }
@@ -172,6 +195,12 @@
       }
 
       timer = window.setTimeout(function () {
+        timer = null;
+        if (isAnimating()) {
+          queuedAutoAdvance += 1;
+          syncButtons();
+          return;
+        }
         stepIndex += 1;
         applyCurrentStep(false);
         scheduleNext();
@@ -184,6 +213,7 @@
         return;
       }
       stopPlayback();
+      queuedManualAdvance = 0;
       if (stepIndex >= steps.length - 1) {
         stepIndex = 0;
         applyCurrentStep(true);
@@ -195,8 +225,61 @@
 
     function goTo(index) {
       stopPlayback();
+      queuedManualAdvance = 0;
       stepIndex = index;
       applyCurrentStep(false);
+    }
+
+    function stepBy(delta) {
+      if (!delta) {
+        return;
+      }
+
+      if (delta > 0 && isAnimating()) {
+        queuedManualAdvance += delta;
+        syncButtons();
+        return;
+      }
+
+      if (delta < 0 && isAnimating()) {
+        return;
+      }
+
+      stopPlayback();
+      queuedManualAdvance = 0;
+      goTo(stepIndex + delta);
+    }
+
+    function flushQueuedAdvance() {
+      if (isAnimating()) {
+        syncButtons();
+        return;
+      }
+
+      if (queuedManualAdvance > 0) {
+        queuedManualAdvance -= 1;
+      } else if (isPlaying && queuedAutoAdvance > 0) {
+        queuedAutoAdvance -= 1;
+      } else {
+        syncButtons();
+        return;
+      }
+
+      stepIndex = clamp(stepIndex + 1, 0, Math.max(0, getSteps().length - 1));
+      applyCurrentStep(false);
+
+      if (isAnimating()) {
+        return;
+      }
+
+      if (queuedManualAdvance > 0 || (isPlaying && queuedAutoAdvance > 0)) {
+        window.setTimeout(flushQueuedAdvance, 0);
+        return;
+      }
+
+      if (isPlaying) {
+        scheduleNext();
+      }
     }
 
     function regenerate() {
@@ -204,6 +287,7 @@
         return;
       }
       stopPlayback();
+      queuedManualAdvance = 0;
       currentArray = generateArray(sizeEl.value, patternEl.value);
       setSteps(buildSteps(currentArray));
       stepIndex = 0;
@@ -227,13 +311,14 @@
       syncButtons();
     });
     nextBtn.addEventListener('click', function () {
-      goTo(stepIndex + 1);
+      stepBy(1);
     });
     backBtn.addEventListener('click', function () {
-      goTo(stepIndex - 1);
+      stepBy(-1);
     });
     resetBtn.addEventListener('click', function () {
       stopPlayback();
+      queuedManualAdvance = 0;
       stepIndex = 0;
       applyCurrentStep(true);
     });
@@ -255,6 +340,8 @@
       regenerateBtn.addEventListener('click', regenerate);
     }
 
+    window.addEventListener('sortlab:animationend', flushQueuedAdvance);
+
     syncSpeed();
     if (setSteps && buildSteps && currentArray.length) {
       setSteps(buildSteps(currentArray));
@@ -263,6 +350,37 @@
 
     return {
       regenerate: regenerate,
+      play: play,
+      pause: function () {
+        stopPlayback();
+        syncButtons();
+      },
+      togglePlay: function () {
+        if (isPlaying) {
+          stopPlayback();
+          syncButtons();
+          return;
+        }
+        play();
+      },
+      next: function () {
+        stepBy(1);
+      },
+      back: function () {
+        stepBy(-1);
+      },
+      jump: function (delta) {
+        stepBy(delta);
+      },
+      reset: function () {
+        stopPlayback();
+        queuedManualAdvance = 0;
+        stepIndex = 0;
+        applyCurrentStep(true);
+      },
+      isPlaying: function () {
+        return isPlaying;
+      },
       getCurrentArray: function () {
         return currentArray.slice();
       },

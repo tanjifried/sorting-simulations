@@ -238,7 +238,7 @@
 
     rebuildStepSets(sharedArray);
 
-    initControls({
+    const controls = initControls({
       sketch: sketchGroup,
       initialArray: sharedArray,
       getSteps: function () {
@@ -299,6 +299,15 @@
       patternEl: document.getElementById('patternSelect'),
       regenerateBtn: document.getElementById('regenerateBtn'),
       speedValueEl: document.getElementById('speedValue'),
+    });
+
+    SortLabShell.registerPageRuntime({
+      controls: controls,
+      onTileContentMounted: function (content) {
+        if (content === 'compare') {
+          SortLabShell.dispatchResize(0);
+        }
+      },
     });
   </script>
 </body>

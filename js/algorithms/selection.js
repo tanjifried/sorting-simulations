@@ -1,4 +1,17 @@
 (function () {
+  function createCodeLine(pseudo, java, cpp, python) {
+    return {
+      pseudo: pseudo,
+      java: java,
+      cpp: cpp,
+      python: python,
+    };
+  }
+
+  function makeStep(type, data, lineMap) {
+    return Object.assign({ type: type, codeLine: lineMap[type] }, data);
+  }
+
   function computeSteps(arr) {
     const a = [...arr];
     const n = a.length;
@@ -7,50 +20,50 @@
     let comparisons = 0, swaps = 0;
     const totalPasses = Math.max(1, n - 1);
 
-    result.push({ type:'init', array:[...a], sorted:[], pass:0, totalPasses, comparisons, swaps,
-      currentMin:0, action:'Ready to start: each pass finds the smallest unsorted value.' });
+    result.push(makeStep('init', { array:[...a], sorted:[], pass:0, totalPasses, comparisons, swaps,
+      currentMin:0, action:'Ready to start: each pass finds the smallest unsorted value.' }, SELECTION_STEP_LINES));
 
     for (let i = 0; i < n - 1; i++) {
       let minIdx = i;
-      result.push({ type:'start_pass', array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
+      result.push(makeStep('start_pass', { array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
         comparisons, swaps, currentMin:minIdx,
-        action:`Pass ${i+1}: start by assuming index ${i} (${a[i]}) is the minimum.` });
+        action:`Pass ${i+1}: start by assuming index ${i} (${a[i]}) is the minimum.` }, SELECTION_STEP_LINES));
 
       for (let j = i + 1; j < n; j++) {
         comparisons++;
-        result.push({ type:'scan', array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
+        result.push(makeStep('scan', { array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
           comparisons, swaps, currentMin:minIdx, scan:j,
-          action:`Scanning index ${j} (${a[j]}) against current minimum ${a[minIdx]}.` });
+          action:`Scanning index ${j} (${a[j]}) against current minimum ${a[minIdx]}.` }, SELECTION_STEP_LINES));
         if (a[j] < a[minIdx]) {
           minIdx = j;
-          result.push({ type:'new_min', array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
+          result.push(makeStep('new_min', { array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
             comparisons, swaps, currentMin:minIdx,
-            action:`New minimum found: ${a[minIdx]} at index ${minIdx}.` });
+            action:`New minimum found: ${a[minIdx]} at index ${minIdx}.` }, SELECTION_STEP_LINES));
         }
       }
 
       if (minIdx !== i) {
         [a[i], a[minIdx]] = [a[minIdx], a[i]];
         swaps++;
-        result.push({ type:'swap', array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
+        result.push(makeStep('swap', { array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
           comparisons, swaps, currentMin:i, swap:[i, minIdx],
-          action:`Swapped index ${i} with index ${minIdx} to place the minimum in front.` });
+          action:`Swapped index ${i} with index ${minIdx} to place the minimum in front.` }, SELECTION_STEP_LINES));
       } else {
-        result.push({ type:'keep', array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
+        result.push(makeStep('keep', { array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
           comparisons, swaps, currentMin:i,
-          action:'No swap needed. The front value was already the minimum.' });
+          action:'No swap needed. The front value was already the minimum.' }, SELECTION_STEP_LINES));
       }
 
       sorted.add(i);
-      result.push({ type:'mark_sorted', array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
+      result.push(makeStep('mark_sorted', { array:[...a], sorted:[...sorted], pass:i+1, totalPasses,
         comparisons, swaps, currentMin:minIdx,
-        action:`Index ${i} is now permanently sorted.` });
+        action:`Index ${i} is now permanently sorted.` }, SELECTION_STEP_LINES));
     }
 
     for (let i = 0; i < n; i++) sorted.add(i);
-    result.push({ type:'done', array:[...a], sorted:[...sorted], pass:Math.max(0, n-1),
+    result.push(makeStep('done', { array:[...a], sorted:[...sorted], pass:Math.max(0, n-1),
       totalPasses, comparisons, swaps, currentMin:n-1,
-      action:'Finished: Selection Sort placed each minimum into position.' });
+      action:'Finished: Selection Sort placed each minimum into position.' }, SELECTION_STEP_LINES));
     return result;
   }
 
@@ -127,6 +140,17 @@
       '    # mark A[i] as sorted',
       '  return A'
     ]
+  };
+
+  const SELECTION_STEP_LINES = {
+    init: createCodeLine(1, 1, 1, 1),
+    start_pass: createCodeLine(4, 4, 4, 4),
+    scan: createCodeLine(6, 6, 6, 6),
+    new_min: createCodeLine(8, 8, 8, 8),
+    swap: createCodeLine(10, 12, 12, 10),
+    keep: createCodeLine(12, 14, 14, 12),
+    mark_sorted: createCodeLine(13, 16, 16, 13),
+    done: createCodeLine(14, 18, 18, 14),
   };
 
   const SELECTION_LINE_MAP = {

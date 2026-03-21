@@ -1,4 +1,10 @@
 (function () {
+  var PULSE_FRAMES = 8;
+
+  function resolveContainer(containerRef) {
+    return typeof containerRef === 'string' ? document.getElementById(containerRef) : containerRef;
+  }
+
   function getCSSVar(name) {
     return getComputedStyle(document.body).getPropertyValue(name).trim();
   }
@@ -8,6 +14,10 @@
     if (hex.length === 3) hex = hex.split('').map(function (c) { return c + c; }).join('');
     var n = parseInt(hex, 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
   }
 
   function stateColor(state) {
@@ -29,7 +39,14 @@
     return 'default';
   }
 
-  function mountSketch(containerId) {
+  function comparisonIndicesForStep(step) {
+    if (typeof step.comparing === 'number' && typeof step.keyIdx === 'number') {
+      return [step.comparing, step.keyIdx];
+    }
+    return [];
+  }
+
+  function mountSketch(containerRef) {
     var sketch = function (p) {
       var bars = [];
       var maxVal = 100;
@@ -39,12 +56,13 @@
       var paddingSides = 16;
       var barGap = 4;
       var canvasHeight = 340;
+      var pulseState = null;
 
       p.setup = function () {
-        var container = document.getElementById(containerId);
+        var container = resolveContainer(containerRef);
         canvasHeight = Number(container.dataset.height) || 340;
         var cnv = p.createCanvas(container.offsetWidth, canvasHeight);
-        cnv.parent(containerId);
+        cnv.parent(container);
         p.textFont('DM Mono');
       };
 
@@ -63,9 +81,17 @@
 
           var x = paddingSides + i * (barW + barGap);
           var y = p.height - paddingBottom - bars[i].displayH;
+          var alpha = 255;
+
+          if (pulseState && pulseState.indices.indexOf(i) !== -1) {
+            var pulseT = pulseState.frame / Math.max(1, PULSE_FRAMES - 1);
+            var pulseStrength = pulseT < 0.5 ? pulseT * 2 : (1 - pulseT) * 2;
+            alpha = 255 * (1 - pulseStrength * 0.5);
+          }
 
           p.noStroke();
-          p.fill(stateColor(bars[i].state));
+          var fillColor = p.color(stateColor(bars[i].state));
+          p.fill(fillColor.levels[0], fillColor.levels[1], fillColor.levels[2], alpha);
           p.rect(x, y, barW, bars[i].displayH, 4, 4, 0, 0);
 
           p.fill(textColor[0], textColor[1], textColor[2]);
@@ -73,14 +99,23 @@
           p.textAlign(p.CENTER, p.TOP);
           p.text(bars[i].label, x + barW / 2, p.height - paddingBottom + 12);
         }
+
+        if (pulseState) {
+          pulseState.frame += 1;
+          if (pulseState.frame >= PULSE_FRAMES) {
+            pulseState = null;
+          }
+        }
       };
 
       p.windowResized = function () {
-        var container = document.getElementById(containerId);
+        var container = resolveContainer(containerRef);
         p.resizeCanvas(container.offsetWidth, canvasHeight);
       };
 
       p.applyStep = function (step) {
+        pulseState = null;
+        window.sortLabAnimating = !!window.sortLabAnimationCount;
         maxVal = Math.max(1, Math.max.apply(null, step.array));
         step.array.forEach(function (val, i) {
           if (!bars[i]) bars[i] = { value: val, displayH: 0, state: 'default', label: String(val) };
@@ -89,9 +124,14 @@
           bars[i].label = String(val);
         });
         bars.length = step.array.length;
+        var indices = comparisonIndicesForStep(step);
+        if (indices.length) {
+          pulseState = { indices: indices, frame: 0 };
+        }
       };
 
       p.resetBars = function (array) {
+        pulseState = null;
         maxVal = Math.max(1, Math.max.apply(null, array));
         bars = array.map(function (v) {
           return { value: v, displayH: 0, state: 'default', label: String(v) };
@@ -100,6 +140,11 @@
 
       p.setLerpSpeed = function (value) {
         lerpSpeed = value;
+      };
+
+      p.destroy = function () {
+        pulseState = null;
+        p.remove();
       };
     };
 

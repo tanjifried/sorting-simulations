@@ -1,4 +1,17 @@
 (function () {
+  function createCodeLine(pseudo, java, cpp, python) {
+    return {
+      pseudo: pseudo,
+      java: java,
+      cpp: cpp,
+      python: python,
+    };
+  }
+
+  function makeStep(type, data, lineMap) {
+    return Object.assign({ type: type, codeLine: lineMap[type] }, data);
+  }
+
   function computeSteps(arr) {
     const a = [...arr];
     const n = a.length;
@@ -7,45 +20,45 @@
     let comparisons = 0, swaps = 0;
     const totalPasses = Math.max(1, n - 1);
 
-    result.push({ type:'init', array:[...a], sorted:[], pass:0, totalPasses, comparisons, swaps,
-      action:'Ready to start: Bubble Sort compares neighboring bars from left to right.' });
+    result.push(makeStep('init', { array:[...a], sorted:[], pass:0, totalPasses, comparisons, swaps,
+      action:'Ready to start: Bubble Sort compares neighboring bars from left to right.' }, BUBBLE_STEP_LINES));
 
     for (let i = 0; i < n - 1; i++) {
       let swapped = false;
       for (let j = 0; j < n - 1 - i; j++) {
         comparisons++;
-        result.push({ type:'compare', array:[...a], compare:[j, j+1], sorted:[...sorted],
+        result.push(makeStep('compare', { array:[...a], compare:[j, j+1], sorted:[...sorted],
           pass:i+1, totalPasses, comparisons, swaps,
-          action:`Comparing ${a[j]} and ${a[j+1]}.` });
+          action:`Comparing ${a[j]} and ${a[j+1]}.` }, BUBBLE_STEP_LINES));
         if (a[j] > a[j+1]) {
           [a[j], a[j+1]] = [a[j+1], a[j]];
           swaps++;
           swapped = true;
-          result.push({ type:'swap', array:[...a], swap:[j, j+1], sorted:[...sorted],
+          result.push(makeStep('swap', { array:[...a], swap:[j, j+1], sorted:[...sorted],
             pass:i+1, totalPasses, comparisons, swaps,
-            action:`Swapped because ${a[j+1]} was larger than ${a[j]} before the swap.` });
+            action:`Swapped because ${a[j+1]} was larger than ${a[j]} before the swap.` }, BUBBLE_STEP_LINES));
         } else {
-          result.push({ type:'no_swap', array:[...a], noSwap:[j, j+1], sorted:[...sorted],
+          result.push(makeStep('no_swap', { array:[...a], noSwap:[j, j+1], sorted:[...sorted],
             pass:i+1, totalPasses, comparisons, swaps,
-            action:'No swap needed because the pair is already in order.' });
+            action:'No swap needed because the pair is already in order.' }, BUBBLE_STEP_LINES));
         }
       }
       sorted.add(n - 1 - i);
-      result.push({ type:'pass_complete', array:[...a], sorted:[...sorted],
+      result.push(makeStep('pass_complete', { array:[...a], sorted:[...sorted],
         pass:i+1, totalPasses, comparisons, swaps,
-        action:`Pass ${i+1} complete: the rightmost unsorted value is now fixed.` });
+        action:`Pass ${i+1} complete: the rightmost unsorted value is now fixed.` }, BUBBLE_STEP_LINES));
       if (!swapped) {
         for (let k = 0; k < n - 1 - i; k++) sorted.add(k);
-        result.push({ type:'early_exit', array:[...a], sorted:[...sorted],
+        result.push(makeStep('early_exit', { array:[...a], sorted:[...sorted],
           pass:i+1, totalPasses, comparisons, swaps, isEarlyExit:true,
-          action:'No swaps this pass — list is already sorted.' });
+          action:'No swaps this pass — list is already sorted.' }, BUBBLE_STEP_LINES));
         break;
       }
     }
     for (let i = 0; i < n; i++) sorted.add(i);
-    result.push({ type:'done', array:[...a], sorted:[...sorted],
+    result.push(makeStep('done', { array:[...a], sorted:[...sorted],
       pass: Math.min(n-1, result[result.length-1]?.pass || 0), totalPasses, comparisons, swaps,
-      action:'Finished: every bar is in ascending order.' });
+      action:'Finished: every bar is in ascending order.' }, BUBBLE_STEP_LINES));
     return result;
   }
 
@@ -79,6 +92,7 @@
       '      }',
       '      // no swap — condition was false',
       '    }',
+      '    // mark rightmost as sorted',
       '    if (!swapped) break;',
       '  }',
       '}'
@@ -96,6 +110,7 @@
       '      }',
       '      // no swap — condition was false',
       '    }',
+      '    // mark rightmost as sorted',
       '    if (!swapped) break;',
       '  }',
       '}'
@@ -118,42 +133,52 @@
     ]
   };
 
+  const BUBBLE_STEP_LINES = {
+    init: createCodeLine(1, 1, 1, 1),
+    compare: createCodeLine(6, 6, 6, 6),
+    swap: createCodeLine(8, 8, 8, 8),
+    no_swap: createCodeLine(10, 11, 11, 10),
+    pass_complete: createCodeLine(11, 13, 13, 11),
+    early_exit: createCodeLine(13, 14, 14, 13),
+    done: createCodeLine(14, 16, 16, 14)
+  };
+
   const BUBBLE_LINE_MAP = {
     pseudo: {
-      init: 1, // "function bubbleSort(A):"
-      compare: 6, // "      compare A[j] and A[j+1]"
-      swap: 8, // "        swap A[j], A[j+1]"
-      no_swap: 10, // "      -- no swap, move to next"
-      pass_complete: 11, // "    mark rightmost as sorted"
-      early_exit: 13, // "      break"
-      done: 14 // "  return A"
+      init: 1,
+      compare: 6,
+      swap: 8,
+      no_swap: 10,
+      pass_complete: 11,
+      early_exit: 13,
+      done: 14,
     },
     java: {
-      init: 1, // "void bubbleSort(int[] A) {"
-      compare: 6, // "      // compare A[j] and A[j + 1]"
-      swap: 8, // "        int temp = A[j]; A[j] = A[j+1]; A[j+1] = temp;"
-      no_swap: 11, // "      // no swap — condition was false"
-      pass_complete: 12, // "    }"
-      early_exit: 13, // "    if (!swapped) break;"
-      done: 15 // "}"
+      init: 1,
+      compare: 6,
+      swap: 8,
+      no_swap: 11,
+      pass_complete: 13,
+      early_exit: 14,
+      done: 16,
     },
     cpp: {
-      init: 1, // "void bubbleSort(vector<int>& A) {"
-      compare: 6, // "      // compare A[j] and A[j + 1]"
-      swap: 8, // "        swap(A[j], A[j + 1]);"
-      no_swap: 11, // "      // no swap — condition was false"
-      pass_complete: 12, // "    }"
-      early_exit: 13, // "    if (!swapped) break;"
-      done: 15 // "}"
+      init: 1,
+      compare: 6,
+      swap: 8,
+      no_swap: 11,
+      pass_complete: 13,
+      early_exit: 14,
+      done: 16,
     },
     python: {
-      init: 1, // "def bubble_sort(A):"
-      compare: 6, // "      # compare A[j] and A[j + 1]"
-      swap: 8, // "        A[j], A[j + 1] = A[j + 1], A[j]"
-      no_swap: 10, // "      # no swap — condition was false"
-      pass_complete: 11, // "    # mark sorted"
-      early_exit: 13, // "      break"
-      done: 14 // "  return A"
+      init: 1,
+      compare: 6,
+      swap: 8,
+      no_swap: 10,
+      pass_complete: 11,
+      early_exit: 13,
+      done: 14,
     }
   };
 

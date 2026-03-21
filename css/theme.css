@@ -15,6 +15,15 @@ body[data-theme="dark"] {
   --bar-min: #f97316;
   --bar-key: #38bdf8;
   --bar-shift: #a855f7;
+  --tok-kw: #569cd6;
+  --tok-type: #4ec9b0;
+  --tok-fn: #dcdcaa;
+  --tok-var: #9cdcfe;
+  --tok-num: #b5cea8;
+  --tok-op: #d4d4d4;
+  --tok-punct: #d4d4d4;
+  --tok-comment: #6a9955;
+  --tok-str: #ce9178;
 }
 
 body[data-theme="light"] {
@@ -34,6 +43,15 @@ body[data-theme="light"] {
   --bar-min: #f97316;
   --bar-key: #38bdf8;
   --bar-shift: #a855f7;
+  --tok-kw: #0000ff;
+  --tok-type: #267f99;
+  --tok-fn: #795e26;
+  --tok-var: #001080;
+  --tok-num: #098658;
+  --tok-op: #000000;
+  --tok-punct: #000000;
+  --tok-comment: #008000;
+  --tok-str: #a31515;
 }
 
 body[data-theme="ocean"] {
@@ -53,6 +71,15 @@ body[data-theme="ocean"] {
   --bar-min: #f97316;
   --bar-key: #38bdf8;
   --bar-shift: #a855f7;
+  --tok-kw: #4fc1ff;
+  --tok-type: #4ec9b0;
+  --tok-fn: #dcdcaa;
+  --tok-var: #9cdcfe;
+  --tok-num: #b5cea8;
+  --tok-op: #d4d4d4;
+  --tok-punct: #d4d4d4;
+  --tok-comment: #6a9955;
+  --tok-str: #ce9178;
 }
 
 body[data-theme="forest"] {
@@ -72,4 +99,13 @@ body[data-theme="forest"] {
   --bar-min: #f97316;
   --bar-key: #38bdf8;
   --bar-shift: #a855f7;
+  --tok-kw: #6ab04c;
+  --tok-type: #4ec9b0;
+  --tok-fn: #f9ca24;
+  --tok-var: #9cdcfe;
+  --tok-num: #b5cea8;
+  --tok-op: #d4d4d4;
+  --tok-punct: #d4d4d4;
+  --tok-comment: #8fbc8f;
+  --tok-str: #e17055;
 }
