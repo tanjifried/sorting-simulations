@@ -1,5 +1,5 @@
 (function () {
-  var SHIFT_FRAMES = 14;
+  var SHIFT_FRAMES = 18;
   var PULSE_FRAMES = 8;
 
   function resolveContainer(containerRef) {

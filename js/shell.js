@@ -70,14 +70,12 @@
 
   function syncFullscreenControls() {
     var isFullscreen = !!getFullscreenElement();
-    if (shellState.fullscreenButton) {
-      shellState.fullscreenButton.innerHTML = isFullscreen
-        ? '<span aria-hidden="true">×</span> Exit Fullscreen'
-        : '<span aria-hidden="true">⛶</span> Fullscreen';
-      shellState.fullscreenButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
-    }
     if (shellState.fullscreenExitButton) {
       shellState.fullscreenExitButton.hidden = !isFullscreen;
+    }
+    // Hide floating panel in fullscreen, show otherwise
+    if (shellState.floatPanel) {
+      shellState.floatPanel.hidden = isFullscreen;
     }
   }
 
@@ -112,54 +110,6 @@
     link.className = 'topnav-link' + (page.file === activeFile ? ' active' : '');
     link.textContent = page.label === 'Compare All' ? 'Compare' : page.label.replace(' Sort', '');
     return link;
-  }
-
-  function renderStepper(page) {
-    if (page.step < 0) {
-      return null;
-    }
-
-    var stepper = document.createElement('div');
-    stepper.className = 'progress-stepper';
-    stepper.id = 'progressStepper';
-
-    var track = document.createElement('div');
-    track.className = 'stepper-track';
-
-    PAGES.filter(function (item) {
-      return item.step >= 0;
-    }).forEach(function (item, index) {
-      var stepItem = document.createElement('a');
-      stepItem.href = item.file;
-      stepItem.className = 'step-item';
-      if (item.step === page.step) {
-        stepItem.className += ' current';
-      } else if (item.step < page.step) {
-        stepItem.className += ' complete';
-      }
-
-      var dot = document.createElement('span');
-      dot.className = 'step-dot';
-      stepItem.appendChild(dot);
-
-      var meta = document.createElement('span');
-      meta.className = 'step-meta';
-
-      var idx = document.createElement('span');
-      idx.className = 'step-index';
-      idx.textContent = 'Step ' + (index + 1);
-
-      var label = document.createElement('strong');
-      label.textContent = item.label;
-
-      meta.appendChild(idx);
-      meta.appendChild(label);
-      stepItem.appendChild(meta);
-      track.appendChild(stepItem);
-    });
-
-    stepper.appendChild(track);
-    return stepper;
   }
 
   function dispatchSyntheticResize(delay) {
@@ -445,6 +395,274 @@
     });
   }
 
+  // ── FLOATING SETTINGS / CONTROLS PANEL ─────────────────────────────────────
+  // A draggable pill-bar that replaces the fixed left/right sidebars.
+  // Persisted position in localStorage. Hidden in fullscreen.
+  var PANEL_POS_KEY = 'sort-lab-panel-pos';
+  var PANEL_VIS_KEY = 'sort-lab-panel-vis';
+
+  function buildFloatingPanel(page) {
+    if (page.step < 0) return; // home page — no panel needed
+
+    // ── Read persisted visibility settings ──
+    var defaultVis = { controls: true, speed: true, panels: true, legend: true };
+    var vis = defaultVis;
+    try {
+      var saved = JSON.parse(localStorage.getItem(PANEL_VIS_KEY) || 'null');
+      if (saved) vis = Object.assign({}, defaultVis, saved);
+    } catch (e) { vis = defaultVis; }
+
+    function saveVis() {
+      localStorage.setItem(PANEL_VIS_KEY, JSON.stringify(vis));
+    }
+
+    // ── Read persisted position ──
+    var pos = { x: 24, y: 80 };
+    try {
+      var savedPos = JSON.parse(localStorage.getItem(PANEL_POS_KEY) || 'null');
+      if (savedPos && typeof savedPos.x === 'number') pos = savedPos;
+    } catch (e) {}
+
+    function savePos() { localStorage.setItem(PANEL_POS_KEY, JSON.stringify(pos)); }
+
+    // ── Outer container ──
+    var panel = document.createElement('div');
+    panel.className = 'float-panel';
+    panel.id = 'floatPanel';
+    panel.style.left = pos.x + 'px';
+    panel.style.top = pos.y + 'px';
+
+    // ── Tab bar (sections the user can toggle) ──
+    var tabs = document.createElement('div');
+    tabs.className = 'float-tabs';
+
+    // ── Inner sections container ──
+    var body = document.createElement('div');
+    body.className = 'float-body';
+
+    // ── Collapse toggle ──
+    var collapsed = false;
+    var collapseBtn = document.createElement('button');
+    collapseBtn.type = 'button';
+    collapseBtn.className = 'float-collapse-btn';
+    collapseBtn.setAttribute('aria-label', 'Collapse panel');
+    collapseBtn.innerHTML = '&#x2212;'; // minus
+    collapseBtn.addEventListener('click', function () {
+      collapsed = !collapsed;
+      panel.classList.toggle('float-panel--collapsed', collapsed);
+      collapseBtn.innerHTML = collapsed ? '&#x002B;' : '&#x2212;';
+    });
+
+    // ── Settings (gear) toggle ──
+    var settingsOpen = false;
+    var settingsBtn = document.createElement('button');
+    settingsBtn.type = 'button';
+    settingsBtn.className = 'float-settings-btn';
+    settingsBtn.setAttribute('aria-label', 'Settings');
+    settingsBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 10a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.5"/><path d="M13.3 6.7l-.9-.5a5.1 5.1 0 000-1.4l.9-.5a1 1 0 00.4-1.4l-.8-1.4a1 1 0 00-1.4-.4l-.9.5a5.1 5.1 0 00-1.2-.7V.8A1 1 0 008.4 0H7.6a1 1 0 00-1 .8v1.1a5.1 5.1 0 00-1.2.7l-.9-.5a1 1 0 00-1.4.4L2.3 3.9a1 1 0 00.4 1.4l.9.5a5.1 5.1 0 000 1.4l-.9.5a1 1 0 00-.4 1.4l.8 1.4a1 1 0 001.4.4l.9-.5a5.1 5.1 0 001.2.7v1.1a1 1 0 001 .8h.8a1 1 0 001-.8v-1.1a5.1 5.1 0 001.2-.7l.9.5a1 1 0 001.4-.4l.8-1.4a1 1 0 00-.4-1.4z" stroke="currentColor" stroke-width="1.2"/></svg>';
+
+    var settingsPane = document.createElement('div');
+    settingsPane.className = 'float-settings-pane';
+    settingsPane.hidden = true;
+
+    var visItems = [
+      { key: 'controls', label: 'Playback Controls' },
+      { key: 'speed', label: 'Speed Controls' },
+      { key: 'panels', label: 'Panel Manager' },
+      { key: 'legend', label: 'Legend / How-to' },
+    ];
+    var settingsTitle = document.createElement('div');
+    settingsTitle.className = 'float-settings-title';
+    settingsTitle.textContent = 'Visible Sections';
+    settingsPane.appendChild(settingsTitle);
+
+    visItems.forEach(function (item) {
+      var row = document.createElement('label');
+      row.className = 'float-settings-row';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = vis[item.key];
+      cb.addEventListener('change', function () {
+        vis[item.key] = cb.checked;
+        saveVis();
+        applyVisibility();
+      });
+      var lbl = document.createElement('span');
+      lbl.textContent = item.label;
+      row.appendChild(cb);
+      row.appendChild(lbl);
+      settingsPane.appendChild(row);
+    });
+
+    settingsBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      settingsOpen = !settingsOpen;
+      settingsPane.hidden = !settingsOpen;
+      settingsBtn.classList.toggle('active', settingsOpen);
+    });
+
+    // ── Drag handle ──
+    var handle = document.createElement('div');
+    handle.className = 'float-handle';
+    handle.setAttribute('aria-label', 'Drag to move panel');
+    handle.innerHTML = '<svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="1" y1="1" x2="13" y2="1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="4" x2="13" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+
+    installPanelDrag(panel, handle, pos, savePos);
+
+    // ── Header bar ──
+    var header = document.createElement('div');
+    header.className = 'float-header';
+    header.appendChild(handle);
+    header.appendChild(collapseBtn);
+    header.appendChild(settingsBtn);
+    panel.appendChild(header);
+    panel.appendChild(settingsPane);
+    panel.appendChild(body);
+
+    // ── Build sections ──
+    var sections = {};
+
+    // Controls section (playback + data)
+    var controlsSection = document.createElement('div');
+    controlsSection.className = 'float-section';
+    controlsSection.dataset.sectionKey = 'controls';
+    sections.controls = controlsSection;
+
+    // Speed section
+    var speedSection = document.createElement('div');
+    speedSection.className = 'float-section';
+    speedSection.dataset.sectionKey = 'speed';
+    sections.speed = speedSection;
+
+    // Panels section (tile manager)
+    var panelsSection = document.createElement('div');
+    panelsSection.className = 'float-section';
+    panelsSection.dataset.sectionKey = 'panels';
+    sections.panels = panelsSection;
+
+    // Legend section
+    var legendSection = document.createElement('div');
+    legendSection.className = 'float-section';
+    legendSection.dataset.sectionKey = 'legend';
+    sections.legend = legendSection;
+
+    // Move control-group elements from the hidden left-panel into float sections
+    var leftPanel = document.getElementById('leftPanel');
+    var rightPanel = document.getElementById('rightPanel');
+
+    if (leftPanel) {
+      var groups = leftPanel.querySelectorAll('.control-group');
+      groups.forEach(function (g, i) {
+        if (i === 0 || i === 1) {
+          // Data Setup + Playback → controls
+          controlsSection.appendChild(g);
+        } else {
+          // Speed
+          speedSection.appendChild(g);
+        }
+      });
+    }
+
+    // Build panels manager section
+    var panelsMgrTitle = document.createElement('div');
+    panelsMgrTitle.className = 'float-section-title';
+    panelsMgrTitle.textContent = 'Panels';
+    panelsSection.appendChild(panelsMgrTitle);
+
+    var panelsMgrBody = document.createElement('div');
+    panelsMgrBody.className = 'float-panels-mgr';
+    panelsMgrBody.id = 'floatPanelsMgr';
+    panelsSection.appendChild(panelsMgrBody);
+
+    // Legend section — built inline so we don't conflict with buildWorkspace
+    // which also grabs .how-section for the tile stash.
+    var legendTitle = document.createElement('div');
+    legendTitle.className = 'float-section-title';
+    legendTitle.textContent = 'Legend';
+    legendSection.appendChild(legendTitle);
+
+    var legendRow = document.createElement('div');
+    legendRow.className = 'legend-row';
+
+    var legendItems = [
+      { cls: 'default',  label: 'Default' },
+      { cls: 'compare',  label: 'Compare' },
+      { cls: 'swap',     label: 'Swap' },
+      { cls: 'sorted',   label: 'Sorted' },
+      { cls: 'noswap',   label: 'No Swap' },
+      { cls: 'min',      label: 'Min' },
+      { cls: 'key',      label: 'Key' },
+      { cls: 'shift',    label: 'Shift' },
+    ];
+    legendItems.forEach(function (item) {
+      var pill = document.createElement('span');
+      pill.className = 'legend-pill';
+      var swatch = document.createElement('i');
+      swatch.className = 'swatch ' + item.cls;
+      pill.appendChild(swatch);
+      pill.appendChild(document.createTextNode(item.label));
+      legendRow.appendChild(pill);
+    });
+    legendSection.appendChild(legendRow);
+
+    body.appendChild(controlsSection);
+    body.appendChild(speedSection);
+    body.appendChild(panelsSection);
+    body.appendChild(legendSection);
+
+    document.body.appendChild(panel);
+
+    // Hide the original sidebar panels (their content has been moved)
+    if (leftPanel) leftPanel.style.display = 'none';
+    if (rightPanel) rightPanel.style.display = 'none';
+
+    // Remove gap that was for sidebars — collapse layout to single column
+    var simLayout = document.querySelector('.sim-layout');
+    if (simLayout) {
+      simLayout.classList.add('panels-floating');
+    }
+
+    function applyVisibility() {
+      Object.keys(sections).forEach(function (key) {
+        sections[key].hidden = !vis[key];
+      });
+    }
+    applyVisibility();
+
+    shellState.floatPanel = panel;
+    shellState.floatPanelsMgr = panelsMgrBody;
+    shellState.floatSections = sections;
+    shellState.floatVis = vis;
+    shellState.applyFloatVisibility = applyVisibility;
+  }
+
+  function installPanelDrag(panel, handle, pos, onSave) {
+    handle.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      handle.setPointerCapture(e.pointerId);
+      var startX = e.clientX - pos.x;
+      var startY = e.clientY - pos.y;
+      panel.classList.add('float-panel--dragging');
+
+      function onMove(me) {
+        pos.x = Math.max(0, Math.min(window.innerWidth - 60, me.clientX - startX));
+        pos.y = Math.max(0, Math.min(window.innerHeight - 40, me.clientY - startY));
+        panel.style.left = pos.x + 'px';
+        panel.style.top = pos.y + 'px';
+      }
+      function onUp() {
+        panel.classList.remove('float-panel--dragging');
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+        onSave();
+      }
+      handle.addEventListener('pointermove', onMove);
+      handle.addEventListener('pointerup', onUp);
+    });
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   function buildShell() {
     applySavedTheme();
 
@@ -465,7 +683,7 @@
 
     var brandVersion = document.createElement('span');
     brandVersion.className = 'topnav-version';
-    brandVersion.textContent = 'v1.1.0';
+    brandVersion.textContent = 'v1.2.0';
 
     brand.appendChild(brandName);
     brand.appendChild(brandVersion);
@@ -508,29 +726,6 @@
       localStorage.setItem('sort-lab-theme', theme.value);
     });
 
-    var fullscreenBtn = document.createElement('button');
-    fullscreenBtn.className = 'present-btn fullscreen-btn';
-    fullscreenBtn.type = 'button';
-    fullscreenBtn.setAttribute('aria-pressed', 'false');
-    fullscreenBtn.addEventListener('click', function () {
-      toggleFullscreen();
-    });
-    shellState.fullscreenButton = fullscreenBtn;
-
-    var fullscreenExitButton = document.createElement('button');
-    fullscreenExitButton.className = 'fullscreen-exit-fab';
-    fullscreenExitButton.type = 'button';
-    fullscreenExitButton.hidden = true;
-    fullscreenExitButton.setAttribute('aria-label', 'Exit fullscreen');
-    fullscreenExitButton.textContent = 'Exit Fullscreen';
-    fullscreenExitButton.addEventListener('click', function () {
-      if (getFullscreenElement()) {
-        exitFullscreenMode();
-      }
-    });
-    shellState.fullscreenExitButton = fullscreenExitButton;
-    document.body.appendChild(fullscreenExitButton);
-
     var helpBtn = document.createElement('button');
     helpBtn.className = 'pill-btn help-btn';
     helpBtn.type = 'button';
@@ -541,17 +736,13 @@
     });
 
     right.appendChild(theme);
-    right.appendChild(fullscreenBtn);
     right.appendChild(helpBtn);
     nav.appendChild(right);
 
-    var stepper = renderStepper(page);
-    if (stepper) {
-      document.body.insertBefore(stepper, document.body.firstChild);
-    }
     document.body.insertBefore(nav, document.body.firstChild);
     syncFullscreenControls();
     buildShortcutOverlay();
+    buildFloatingPanel(page);
   }
 
   function wireCollapse(buttonId, panelId, className, collapsedText, expandedText) {
@@ -1109,6 +1300,9 @@
       // setup() can re-measure the container after paint.
       dispatchSyntheticResize(0);
       dispatchSyntheticResize(80);
+
+      // Keep floating panel manager in sync
+      window.setTimeout(updateFloatPanelsMgr, 60);
     }
 
     workspace.saveLayout = saveLayout;
@@ -1137,6 +1331,96 @@
     return workspace;
   }
 
+  function updateFloatPanelsMgr() {
+    var mgr = shellState.floatPanelsMgr;
+    var workspace = shellState.workspace;
+    if (!mgr || !workspace) return;
+    mgr.innerHTML = '';
+
+    var contents = workspace.contents;
+    var tiles = workspace.layout.tiles;
+
+    // ── Active tiles (with remove button) ──
+    var hasTiles = false;
+    tiles.forEach(function (tile) {
+      if (tile.content === 'empty') return;
+      hasTiles = true;
+      var row = document.createElement('div');
+      row.className = 'float-panel-row';
+
+      var lbl = document.createElement('span');
+      lbl.textContent = contents[tile.content] ? contents[tile.content].label : tile.content;
+
+      var rmBtn = document.createElement('button');
+      rmBtn.type = 'button';
+      rmBtn.className = 'float-panel-remove';
+      rmBtn.innerHTML = '&times;';
+      rmBtn.title = 'Remove panel';
+      (function (tileId) {
+        rmBtn.addEventListener('click', function () {
+          workspace.placeTileContent(tileId, 'empty');
+          window.setTimeout(updateFloatPanelsMgr, 80);
+        });
+      }(tile.id));
+
+      row.appendChild(lbl);
+      row.appendChild(rmBtn);
+      mgr.appendChild(row);
+    });
+
+    // ── Available panels not yet shown ──
+    var usedKeys = {};
+    tiles.forEach(function (t) { if (t.content !== 'empty') usedKeys[t.content] = true; });
+    var available = Object.keys(contents).filter(function (k) { return !usedKeys[k]; });
+
+    if (!available.length) return;
+
+    var addTitle = document.createElement('div');
+    addTitle.className = 'float-panels-add-title';
+    addTitle.textContent = hasTiles ? 'Add' : 'Choose a panel';
+    mgr.appendChild(addTitle);
+
+    var maxTiles = 6;
+    available.forEach(function (key) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'float-panel-add-btn';
+      btn.textContent = '+ ' + contents[key].label;
+
+      // Find an empty slot first; if none, we'll split the last tile
+      var emptyTile = null;
+      for (var i = 0; i < tiles.length; i++) {
+        if (tiles[i].content === 'empty') { emptyTile = tiles[i]; break; }
+      }
+
+      if (!emptyTile && tiles.length >= maxTiles) {
+        btn.disabled = true;
+      }
+
+      (function (contentKey, empty) {
+        btn.addEventListener('click', function () {
+          if (empty) {
+            // Place directly into existing empty slot
+            workspace.placeTileContent(empty.id, contentKey);
+          } else {
+            // No empty slot — add a new row and place content there
+            var newRow = workspace.layout.rows + 1;
+            workspace.layout.rows = newRow;
+            workspace.layout.rowSizes.push('1fr');
+            var newId = 't' + workspace.layout.nextId;
+            workspace.layout.nextId += 1;
+            workspace.layout.tiles.push({ id: newId, col: 1, row: newRow, content: contentKey });
+            workspace.saveLayout();
+            workspace.render();
+          }
+          window.setTimeout(updateFloatPanelsMgr, 80);
+        });
+      }(key, emptyTile));
+
+      mgr.appendChild(btn);
+    });
+  }
+
   function registerPageRuntime(runtime) {
     shellState.runtime = runtime;
     if (shellState.workspace) {
@@ -1145,6 +1429,7 @@
       shellState.workspace.remountVisualizer();
       dispatchSyntheticResize(0);
       dispatchSyntheticResize(80);
+      window.setTimeout(updateFloatPanelsMgr, 100);
     }
   }
 
@@ -1163,11 +1448,10 @@
     dispatchResize: dispatchSyntheticResize,
     togglePanel: togglePanel,
     bumpStat: bumpStatEl,
+    updatePanelsMgr: updateFloatPanelsMgr,
   };
 
   buildShell();
-  wireCollapse('collapseLeftBtn', 'leftPanel', 'left-collapsed', '>', '<');
-  wireCollapse('collapseRightBtn', 'rightPanel', 'right-collapsed', '<', '>');
   installFullscreenBehavior();
   installKeyboardShortcuts();
   shellState.workspace = buildWorkspace();
