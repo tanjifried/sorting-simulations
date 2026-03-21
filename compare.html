@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare All - Sort Lab</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+</head>
+<body data-theme="dark">
+  <div class="page-wrapper">
+    <div class="sim-layout compare-layout">
+      <aside class="left-panel" id="leftPanel">
+        <div class="panel-header">
+          <span class="algo-badge">Compare All</span>
+          <button class="collapse-btn" id="collapseLeftBtn" type="button">&lsaquo;</button>
+        </div>
+        <div class="panel-body">
+          <section class="control-group">
+            <h3>Data Setup</h3>
+            <label class="control-field" for="sizeInput">
+              <span>Array Size</span>
+              <b id="sizeValue">10</b>
+            </label>
+            <input id="sizeInput" type="range" min="6" max="18" value="10" step="1">
+
+            <label class="control-field" for="patternSelect">
+              <span>Pattern</span>
+            </label>
+            <select id="patternSelect">
+              <option value="random">Random</option>
+              <option value="reversed">Reversed</option>
+              <option value="nearly_sorted">Nearly Sorted</option>
+              <option value="few_unique">Few Unique</option>
+            </select>
+
+            <button class="control-button" id="regenerateBtn" type="button">Generate Shared Array</button>
+          </section>
+
+          <section class="control-group">
+            <h3>Playback</h3>
+            <div class="button-grid two-up">
+              <button class="control-button" id="backBtn" type="button">&larr; Prev</button>
+              <button class="control-button accent" id="nextBtn" type="button">Next &rarr;</button>
+              <button class="control-button accent" id="playBtn" type="button">Play</button>
+              <button class="control-button" id="pauseBtn" type="button">Pause</button>
+            </div>
+            <button class="control-button ghost" id="resetBtn" type="button">Reset</button>
+          </section>
+
+          <section class="control-group">
+            <h3>Speed</h3>
+            <label class="control-field" for="speed">
+              <span>Frame Delay</span>
+              <b id="speedValue">300 ms</b>
+            </label>
+            <input id="speed" type="range" min="10" max="1000" value="300" step="10">
+            <div class="button-grid three-up presets">
+              <button class="pill-btn active" id="speedNormalBtn" type="button">Normal</button>
+              <button class="pill-btn" id="speedFastBtn" type="button">Fast</button>
+              <button class="pill-btn" id="speedTurboBtn" type="button">Turbo</button>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <main class="center-panel compare-center">
+        <div class="compare-stack">
+          <section class="compare-lane" id="bubbleLane">
+            <div class="lane-header">
+              <span class="lane-title">Bubble Sort</span>
+              <span class="lane-status" id="bubbleDone">Running</span>
+            </div>
+            <div class="canvas-container compact" id="bubbleCanvas" data-height="220"></div>
+            <div class="narration-banner compact" id="bubbleNarration">Waiting to begin.</div>
+            <div class="stats-row compact">
+              <div class="stat"><span class="stat-label">Step</span><b id="bubbleStep">0 / 0</b></div>
+              <div class="stat"><span class="stat-label">Comparisons</span><b id="bubbleComp">0</b></div>
+              <div class="stat"><span class="stat-label">Swaps</span><b id="bubbleSwap">0</b></div>
+            </div>
+          </section>
+
+          <section class="compare-lane" id="selectionLane">
+            <div class="lane-header">
+              <span class="lane-title">Selection Sort</span>
+              <span class="lane-status" id="selectionDone">Running</span>
+            </div>
+            <div class="canvas-container compact" id="selectionCanvas" data-height="220"></div>
+            <div class="narration-banner compact" id="selectionNarration">Waiting to begin.</div>
+            <div class="stats-row compact">
+              <div class="stat"><span class="stat-label">Step</span><b id="selectionStep">0 / 0</b></div>
+              <div class="stat"><span class="stat-label">Comparisons</span><b id="selectionComp">0</b></div>
+              <div class="stat"><span class="stat-label">Swaps</span><b id="selectionSwap">0</b></div>
+            </div>
+          </section>
+
+          <section class="compare-lane" id="insertionLane">
+            <div class="lane-header">
+              <span class="lane-title">Insertion Sort</span>
+              <span class="lane-status" id="insertionDone">Running</span>
+            </div>
+            <div class="canvas-container compact" id="insertionCanvas" data-height="220"></div>
+            <div class="narration-banner compact" id="insertionNarration">Waiting to begin.</div>
+            <div class="stats-row compact">
+              <div class="stat"><span class="stat-label">Step</span><b id="insertionStep">0 / 0</b></div>
+              <div class="stat"><span class="stat-label">Comparisons</span><b id="insertionComp">0</b></div>
+              <div class="stat"><span class="stat-label">Shifts</span><b id="insertionShift">0</b></div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <aside class="right-panel" id="rightPanel">
+        <div class="panel-header">
+          <span class="panel-title">Compare Snapshot</span>
+          <button class="collapse-btn" id="collapseRightBtn" type="button">&rsaquo;</button>
+        </div>
+        <div class="panel-body">
+          <div class="summary-card">
+            <span class="summary-label">Shared Array</span>
+            <code id="sharedArrayView">[]</code>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Global Step</span>
+            <b id="globalStep">0 / 0</b>
+          </div>
+          <div class="compare-summary-grid">
+            <div class="summary-card">
+              <span class="summary-label">Bubble Finish</span>
+              <b id="bubbleFinish">Pending</b>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Selection Finish</span>
+              <b id="selectionFinish">Pending</b>
+            </div>
+            <div class="summary-card">
+              <span class="summary-label">Insertion Finish</span>
+              <b id="insertionFinish">Pending</b>
+            </div>
+          </div>
+          <div class="code-note">
+            Shared playback advances all three algorithms together. Finished lanes hold on their final step while the others continue.
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="how-section">
+      <h3>How to read this</h3>
+      <div class="legend-row">
+        <span class="legend-pill"><i class="swatch compare"></i> Comparison</span>
+        <span class="legend-pill"><i class="swatch swap"></i> Swap</span>
+        <span class="legend-pill"><i class="swatch min"></i> Selection Min</span>
+        <span class="legend-pill"><i class="swatch key"></i> Insertion Key</span>
+        <span class="legend-pill"><i class="swatch shift"></i> Shift</span>
+        <span class="legend-pill"><i class="swatch sorted"></i> Sorted</span>
+      </div>
+    </section>
+  </div>
+
+  <script src="lib/p5.min.js"></script>
+  <script src="js/algorithms/bubble.js"></script>
+  <script src="js/algorithms/selection.js"></script>
+  <script src="js/algorithms/insertion.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/sketches/compareSketch.js"></script>
+  <script>
+    let sharedArray = SortLabControls.generateArray(10, 'random');
+    let bubbleSteps = [];
+    let selectionSteps = [];
+    let insertionSteps = [];
+    let masterSteps = [];
+
+    const bubbleSketch = mountSketch('bubbleCanvas', 'bubble');
+    const selectionSketch = mountSketch('selectionCanvas', 'selection');
+    const insertionSketch = mountSketch('insertionCanvas', 'insertion');
+
+    function rebuildStepSets(array) {
+      sharedArray = array.slice();
+      bubbleSteps = BubbleAlgorithm.computeSteps(sharedArray);
+      selectionSteps = SelectionAlgorithm.computeSteps(sharedArray);
+      insertionSteps = InsertionAlgorithm.computeSteps(sharedArray);
+      const maxSteps = Math.max(bubbleSteps.length, selectionSteps.length, insertionSteps.length);
+      masterSteps = Array.from({ length: maxSteps }, function (_, index) {
+        return { index: index };
+      });
+      return masterSteps;
+    }
+
+    function stepAt(steps, index) {
+      return steps[Math.min(index, steps.length - 1)];
+    }
+
+    function finishLabel(index, total) {
+      return index >= total - 1 ? 'Done' : 'Running';
+    }
+
+    function finishRank(length, allLengths) {
+      var ordered = allLengths.slice().sort(function (a, b) {
+        return a - b;
+      });
+      return ordered.indexOf(length) + 1;
+    }
+
+    function applyLaneStep(sketch, steps, globalIndex, laneEl) {
+      var step = stepAt(steps, globalIndex);
+      sketch.applyStep(step);
+      if (step.type === 'done') {
+        laneEl.classList.add('lane-done');
+      } else {
+        laneEl.classList.remove('lane-done');
+      }
+    }
+
+    const bubbleLane = document.getElementById('bubbleLane');
+    const selectionLane = document.getElementById('selectionLane');
+    const insertionLane = document.getElementById('insertionLane');
+
+    const sketchGroup = {
+      applyStep: function (step) {
+        const idx = step.index;
+        applyLaneStep(bubbleSketch, bubbleSteps, idx, bubbleLane);
+        applyLaneStep(selectionSketch, selectionSteps, idx, selectionLane);
+        applyLaneStep(insertionSketch, insertionSteps, idx, insertionLane);
+      },
+      resetBars: function (array) {
+        bubbleSketch.resetBars(array);
+        selectionSketch.resetBars(array);
+        insertionSketch.resetBars(array);
+      },
+      setLerpSpeed: function (value) {
+        bubbleSketch.setLerpSpeed(value);
+        selectionSketch.setLerpSpeed(value);
+        insertionSketch.setLerpSpeed(value);
+      },
+    };
+
+    rebuildStepSets(sharedArray);
+
+    initControls({
+      sketch: sketchGroup,
+      initialArray: sharedArray,
+      getSteps: function () {
+        return masterSteps;
+      },
+      setSteps: function (nextSteps) {
+        masterSteps = nextSteps;
+      },
+      buildSteps: function (array) {
+        return rebuildStepSets(array);
+      },
+      onStepChange: function (step, idx, total) {
+        const bubbleStep = stepAt(bubbleSteps, idx);
+        const selectionStep = stepAt(selectionSteps, idx);
+        const insertionStep = stepAt(insertionSteps, idx);
+
+        document.getElementById('globalStep').textContent = (idx + 1) + ' / ' + total;
+        document.getElementById('sharedArrayView').textContent = '[' + sharedArray.join(', ') + ']';
+
+        document.getElementById('bubbleNarration').textContent = bubbleStep.action;
+        document.getElementById('bubbleStep').textContent = (Math.min(idx, bubbleSteps.length - 1) + 1) + ' / ' + bubbleSteps.length;
+        document.getElementById('bubbleComp').textContent = bubbleStep.comparisons;
+        document.getElementById('bubbleSwap').textContent = bubbleStep.swaps;
+        document.getElementById('bubbleDone').textContent = finishLabel(idx, bubbleSteps.length);
+        document.getElementById('bubbleFinish').textContent =
+          'Rank ' + finishRank(bubbleSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +
+          ' at step ' + bubbleSteps.length;
+
+        document.getElementById('selectionNarration').textContent = selectionStep.action;
+        document.getElementById('selectionStep').textContent = (Math.min(idx, selectionSteps.length - 1) + 1) + ' / ' + selectionSteps.length;
+        document.getElementById('selectionComp').textContent = selectionStep.comparisons;
+        document.getElementById('selectionSwap').textContent = selectionStep.swaps;
+        document.getElementById('selectionDone').textContent = finishLabel(idx, selectionSteps.length);
+        document.getElementById('selectionFinish').textContent =
+          'Rank ' + finishRank(selectionSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +
+          ' at step ' + selectionSteps.length;
+
+        document.getElementById('insertionNarration').textContent = insertionStep.action;
+        document.getElementById('insertionStep').textContent = (Math.min(idx, insertionSteps.length - 1) + 1) + ' / ' + insertionSteps.length;
+        document.getElementById('insertionComp').textContent = insertionStep.comparisons;
+        document.getElementById('insertionShift').textContent = insertionStep.shifts;
+        document.getElementById('insertionDone').textContent = finishLabel(idx, insertionSteps.length);
+        document.getElementById('insertionFinish').textContent =
+          'Rank ' + finishRank(insertionSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +
+          ' at step ' + insertionSteps.length;
+      },
+      speedEl: document.getElementById('speed'),
+      playBtn: document.getElementById('playBtn'),
+      pauseBtn: document.getElementById('pauseBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      backBtn: document.getElementById('backBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      speedNormalBtn: document.getElementById('speedNormalBtn'),
+      speedFastBtn: document.getElementById('speedFastBtn'),
+      speedTurboBtn: document.getElementById('speedTurboBtn'),
+      sizeEl: document.getElementById('sizeInput'),
+      sizeValueEl: document.getElementById('sizeValue'),
+      patternEl: document.getElementById('patternSelect'),
+      regenerateBtn: document.getElementById('regenerateBtn'),
+      speedValueEl: document.getElementById('speedValue'),
+    });
+  </script>
+</body>
+</html>

@@ -3,99 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sorting Simulations</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="theme-manager.css">
-  <link rel="stylesheet" href="shared.css">
-  <link rel="stylesheet" href="nav.css">
-  <link rel="stylesheet" href="visualization-enhancements.css">
+  <title>Sort Lab</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
 </head>
-<body data-theme="sky">
-  <main class="page">
-    <section class="hero">
-      <h1>Sorting Algorithms - Visual Simulations</h1>
+<body data-theme="dark">
+  <main class="home-page">
+    <section class="hero-panel">
+      <span class="eyebrow">Sorting Simulations</span>
+      <h1>Sort Lab stages each algorithm as a smooth p5.js performance.</h1>
       <p>
-        Pick a simulation below to watch each sorting method in plain language. Colors explain what each algorithm is doing,
-        while live counters show comparisons, swaps or shifts, and pass progress. Each simulator now includes best/average/worst
-        scenarios and turbo speed controls.
+        Bubble, Selection, and Insertion now share one shell, one playback system, and one
+        accurate live code trace. Open any page directly with <code>file://</code> and the lab
+        runs locally with no build step.
       </p>
-    </section>
-
-    <section class="grid">
-      <article class="card">
-        <span class="badge">Neighbor compare</span>
-        <h2>Bubble Sort</h2>
-        <p>Compares values side-by-side and swaps when out of order. Biggest values drift to the right after each pass.</p>
-        <a class="button" href="bubble_sort_simulation.html">Open Bubble Sort</a>
-      </article>
-
-      <article class="card">
-        <span class="badge">Find min first</span>
-        <h2>Selection Sort</h2>
-        <p>Scans unsorted values to find the smallest, then puts it in the next sorted slot at the front.</p>
-        <a class="button" href="selection_sort_simulation.html">Open Selection Sort</a>
-      </article>
-
-      <article class="card">
-        <span class="badge">Insert into place</span>
-        <h2>Insertion Sort</h2>
-        <p>Takes one key at a time and inserts it into the already-sorted left side, shifting values right when needed.</p>
-        <a class="button" href="insertion_sort_simulation.html">Open Insertion Sort</a>
-      </article>
-    </section>
-
-    <section class="capstone-section">
-      <div class="capstone-label">Step 4 - See them race</div>
-      <div class="capstone-body">
-        <div>
-          <h2>Compare All</h2>
-          <p>
-            Run Bubble, Selection, and Insertion on the same array at the same time.
-            Watch which finishes first and compare total comparisons and swaps side by side.
-            Best viewed after studying each algorithm individually.
-          </p>
-        </div>
-        <a class="button compare" href="compare_all_simulation.html">Open Compare All -></a>
+      <div class="hero-actions">
+        <a class="button-link" href="bubble.html">Open Bubble Sort</a>
+        <a class="button-link ghost" href="compare.html">Compare All</a>
       </div>
     </section>
 
-    <section class="table">
-      <table>
+    <section class="download-note">
+      <h2>Local p5.js runtime</h2>
+      <p>
+        This project loads <code>lib/p5.min.js</code> locally. If the file is missing, download
+        p5.js v1.9.4 from
+        <a href="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js">https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js</a>
+        and save it as <code>lib/p5.min.js</code>.
+      </p>
+    </section>
+
+    <section class="card-grid">
+      <article class="feature-card">
+        <span class="card-kicker">Neighbor compare</span>
+        <h2>Bubble Sort</h2>
+        <p>Watch the largest values rise to the right through repeated adjacent comparisons.</p>
+        <a class="button-link" href="bubble.html">Launch Bubble</a>
+      </article>
+
+      <article class="feature-card">
+        <span class="card-kicker">Find the minimum</span>
+        <h2>Selection Sort</h2>
+        <p>Track the current minimum, scan the unsorted side, and place one value per pass.</p>
+        <a class="button-link" href="selection.html">Launch Selection</a>
+      </article>
+
+      <article class="feature-card">
+        <span class="card-kicker">Insert into place</span>
+        <h2>Insertion Sort</h2>
+        <p>Follow the key as it shifts leftward into a growing sorted region.</p>
+        <a class="button-link" href="insertion.html">Launch Insertion</a>
+      </article>
+    </section>
+
+    <section class="compare-callout">
+      <div>
+        <span class="eyebrow">Capstone</span>
+        <h2>Compare all three on the same starting array.</h2>
+        <p>
+          Run a synchronized race, pause anywhere, then step backward to inspect how each
+          strategy spends its comparisons and swaps.
+        </p>
+      </div>
+      <a class="button-link" href="compare.html">Open Compare All</a>
+    </section>
+
+    <section class="table-card">
+      <h2>Complexity snapshot</h2>
+      <table class="complexity-table">
         <thead>
           <tr>
             <th>Algorithm</th>
-            <th>Main Idea</th>
-            <th>Best Case</th>
-            <th>Worst Case</th>
+            <th>Main idea</th>
+            <th>Best case</th>
+            <th>Average case</th>
+            <th>Worst case</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Bubble Sort</td>
-            <td>Repeated neighbor comparisons and swaps</td>
-            <td>O(n) with early exit</td>
+            <td>Swap adjacent pairs until no inversion remains</td>
+            <td>O(n)</td>
+            <td>O(n^2)</td>
             <td>O(n^2)</td>
           </tr>
           <tr>
             <td>Selection Sort</td>
-            <td>Find minimum in unsorted area, place it next</td>
+            <td>Select the minimum and place it at the front</td>
+            <td>O(n^2)</td>
             <td>O(n^2)</td>
             <td>O(n^2)</td>
           </tr>
           <tr>
             <td>Insertion Sort</td>
-            <td>Insert each key into sorted left side</td>
+            <td>Insert each key into the sorted left partition</td>
             <td>O(n)</td>
+            <td>O(n^2)</td>
             <td>O(n^2)</td>
           </tr>
         </tbody>
       </table>
     </section>
   </main>
-  <script src="visualization-enhancements.js"></script>
-  <script src="theme-manager.js"></script>
-  <script src="nav.js"></script>
+  <script src="js/shell.js"></script>
 </body>
 </html>

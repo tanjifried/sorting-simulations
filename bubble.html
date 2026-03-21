@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Sort - Sort Lab</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/shell.css">
+</head>
+<body data-theme="dark">
+  <div class="page-wrapper">
+    <div class="sim-layout">
+      <aside class="left-panel" id="leftPanel">
+        <div class="panel-header">
+          <span class="algo-badge">Bubble Sort</span>
+          <button class="collapse-btn" id="collapseLeftBtn" type="button">&lsaquo;</button>
+        </div>
+        <div class="panel-body">
+          <section class="control-group">
+            <h3>Data Setup</h3>
+            <label class="control-field" for="sizeInput">
+              <span>Array Size</span>
+              <b id="sizeValue">10</b>
+            </label>
+            <input id="sizeInput" type="range" min="6" max="18" value="10" step="1">
+
+            <label class="control-field" for="patternSelect">
+              <span>Pattern</span>
+            </label>
+            <select id="patternSelect">
+              <option value="random">Random</option>
+              <option value="reversed">Reversed</option>
+              <option value="nearly_sorted">Nearly Sorted</option>
+              <option value="few_unique">Few Unique</option>
+            </select>
+
+            <button class="control-button" id="regenerateBtn" type="button">Generate Array</button>
+          </section>
+
+          <section class="control-group">
+            <h3>Playback</h3>
+            <div class="button-grid two-up">
+              <button class="control-button" id="backBtn" type="button">&larr; Prev</button>
+              <button class="control-button accent" id="nextBtn" type="button">Next &rarr;</button>
+              <button class="control-button accent" id="playBtn" type="button">Play</button>
+              <button class="control-button" id="pauseBtn" type="button">Pause</button>
+            </div>
+            <button class="control-button ghost" id="resetBtn" type="button">Reset</button>
+          </section>
+
+          <section class="control-group">
+            <h3>Speed</h3>
+            <label class="control-field" for="speed">
+              <span>Frame Delay</span>
+              <b id="speedValue">300 ms</b>
+            </label>
+            <input id="speed" type="range" min="10" max="1000" value="300" step="10">
+            <div class="button-grid three-up presets">
+              <button class="pill-btn active" id="speedNormalBtn" type="button">Normal</button>
+              <button class="pill-btn" id="speedFastBtn" type="button">Fast</button>
+              <button class="pill-btn" id="speedTurboBtn" type="button">Turbo</button>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <main class="center-panel">
+        <div class="canvas-container" id="sketchContainer"></div>
+        <div class="narration-banner" id="narration">Press Play or Step Forward to begin.</div>
+        <div class="stats-row" id="statsRow">
+          <div class="stat"><span class="stat-label">Pass</span><b id="passStat">0 / 0</b></div>
+          <div class="stat"><span class="stat-label">Step</span><b id="stepStat">0 / 0</b></div>
+          <div class="stat"><span class="stat-label">Comparisons</span><b id="compStat">0</b></div>
+          <div class="stat"><span class="stat-label">Swaps</span><b id="swapStat">0</b></div>
+          <div class="stat"><span class="stat-label">Complexity</span><b id="complexStat">O(n^2)</b></div>
+        </div>
+      </main>
+
+      <aside class="right-panel" id="rightPanel">
+        <div class="panel-header">
+          <span class="panel-title">Live Code</span>
+          <select id="codeLanguage">
+            <option value="pseudo">Pseudocode</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+            <option value="python">Python</option>
+          </select>
+          <button class="collapse-btn" id="collapseRightBtn" type="button">&rsaquo;</button>
+        </div>
+        <div class="panel-body">
+          <div class="code-trace-container" id="codeTraceContainer"></div>
+          <div class="code-note" id="codeNote">Line trace follows the current Bubble Sort step.</div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="how-section">
+      <h3>How to read this</h3>
+      <div class="legend-row">
+        <span class="legend-pill"><i class="swatch default"></i> Default</span>
+        <span class="legend-pill"><i class="swatch compare"></i> Compare</span>
+        <span class="legend-pill"><i class="swatch swap"></i> Swap</span>
+        <span class="legend-pill"><i class="swatch sorted"></i> Sorted</span>
+        <span class="legend-pill"><i class="swatch noswap"></i> No Swap</span>
+      </div>
+    </section>
+  </div>
+
+  <script src="lib/p5.min.js"></script>
+  <script src="js/algorithms/bubble.js"></script>
+  <script src="js/shell.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/codeTrace.js"></script>
+  <script src="js/sketches/bubbleSketch.js"></script>
+  <script>
+    let currentArray = SortLabControls.generateArray(10, 'random');
+    let steps = BubbleAlgorithm.computeSteps(currentArray);
+    let currentStep = steps[0];
+
+    const sketch = mountSketch('sketchContainer', 'bubble');
+    const codeTrace = initCodeTrace({
+      container: document.getElementById('codeTraceContainer'),
+      codeStrings: BubbleAlgorithm.codeStrings,
+      lineMap: BubbleAlgorithm.lineMap,
+    });
+
+    function renderCodeForStep(step) {
+      const lang = document.getElementById('codeLanguage').value;
+      codeTrace.render(lang, step.type);
+      document.getElementById('codeNote').textContent =
+        'Tracking ' + lang + ' code for the "' + step.type + '" step.';
+    }
+
+    initControls({
+      sketch,
+      initialArray: currentArray,
+      getSteps: function () {
+        return steps;
+      },
+      setSteps: function (nextSteps) {
+        steps = nextSteps;
+      },
+      buildSteps: function (array) {
+        currentArray = array.slice();
+        return BubbleAlgorithm.computeSteps(currentArray);
+      },
+      onStepChange: function (step, idx, total) {
+        currentStep = step;
+        document.getElementById('narration').textContent = step.action;
+        document.getElementById('passStat').textContent = step.pass + ' / ' + step.totalPasses;
+        document.getElementById('stepStat').textContent = (idx + 1) + ' / ' + total;
+        document.getElementById('compStat').textContent = step.comparisons;
+        document.getElementById('swapStat').textContent = step.swaps;
+        renderCodeForStep(step);
+      },
+      speedEl: document.getElementById('speed'),
+      playBtn: document.getElementById('playBtn'),
+      pauseBtn: document.getElementById('pauseBtn'),
+      nextBtn: document.getElementById('nextBtn'),
+      backBtn: document.getElementById('backBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      speedNormalBtn: document.getElementById('speedNormalBtn'),
+      speedFastBtn: document.getElementById('speedFastBtn'),
+      speedTurboBtn: document.getElementById('speedTurboBtn'),
+      sizeEl: document.getElementById('sizeInput'),
+      sizeValueEl: document.getElementById('sizeValue'),
+      patternEl: document.getElementById('patternSelect'),
+      regenerateBtn: document.getElementById('regenerateBtn'),
+      speedValueEl: document.getElementById('speedValue'),
+    });
+
+    document.getElementById('codeLanguage').addEventListener('change', function () {
+      renderCodeForStep(currentStep);
+    });
+  </script>
+</body>
+</html>
