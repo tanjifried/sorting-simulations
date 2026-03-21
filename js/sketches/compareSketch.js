@@ -205,14 +205,19 @@
           var alpha = 255;
 
           if (animating && swapState && (i === swapState.left || i === swapState.right)) {
-            var rise = easeInOut(phaseProgress(animFrame, 0, SWAP_FRAMES * 0.3));
-            var cross = easeInOut(phaseProgress(animFrame, SWAP_FRAMES * 0.2, SWAP_FRAMES * 0.8));
-            var settle = easeInOut(phaseProgress(animFrame, SWAP_FRAMES * 0.7, SWAP_FRAMES));
+            var rise = phaseProgress(animFrame, 0, SWAP_FRAMES * 0.35);
+            var cross = phaseProgress(animFrame, SWAP_FRAMES * 0.25, SWAP_FRAMES * 0.75);
+            var settle = phaseProgress(animFrame, SWAP_FRAMES * 0.65, SWAP_FRAMES);
             var swapTargetIndex = i === swapState.left ? swapState.right : swapState.left;
             var targetX = paddingSides + swapTargetIndex * (barW + barGap);
-            x = p.lerp(x, targetX, cross);
-            y -= 40 * rise;
-            y += 40 * settle;
+            
+            var arcHeight = 45;
+            var riseOffset = easeInOut(rise) * arcHeight;
+            var settleOffset = (1 - easeInOut(settle)) * arcHeight;
+            var totalYOffset = riseOffset + settleOffset;
+            
+            x = p.lerp(x, targetX, easeInOut(cross));
+            y -= totalYOffset;
           } else if (pulseState && pulseState.indices.indexOf(i) !== -1) {
             var pulseT = pulseState.frame / Math.max(1, PULSE_FRAMES - 1);
             var pulseStrength = pulseT < 0.5 ? pulseT * 2 : (1 - pulseT) * 2;

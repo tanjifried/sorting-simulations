@@ -220,7 +220,8 @@
       var modal = overlay.querySelector('.shortcut-modal');
       var hitModal = !!(modal && (target === modal || modal.contains(target)));
       var hitClose = !!(target && target.closest && target.closest('.shortcut-close'));
-      if (hitModal || hitClose) {
+      var hitBackdrop = target === overlay;
+      if (hitBackdrop || hitClose) {
         toggleShortcutOverlay(false);
       }
     });
@@ -642,7 +643,8 @@
     centerPanel.appendChild(stash);
 
     var codeBundle = null;
-    if (codeTrace) {
+    var codeTraceContainer = document.getElementById('codeTraceContainer');
+    if (codeTrace || codeTraceContainer) {
       codeBundle = document.createElement('div');
       codeBundle.className = 'code-tile-panel';
       if (codeLanguage) {
@@ -655,7 +657,11 @@
         codeToolbar.appendChild(codeLanguage);
         codeBundle.appendChild(codeToolbar);
       }
-      codeBundle.appendChild(codeTrace);
+      if (codeTrace) {
+        codeBundle.appendChild(codeTrace);
+      } else if (codeTraceContainer) {
+        codeBundle.appendChild(codeTraceContainer);
+      }
       if (codeNote) {
         codeBundle.appendChild(codeNote);
       }
@@ -754,7 +760,7 @@
 
       if (content === 'visualizer' && workspace.runtime && typeof workspace.runtime.mountVisualizer === 'function') {
         workspace.runtime.mountVisualizer(body);
-      } else {
+      } else if (workspace.contents[content] && workspace.contents[content].node) {
         body.appendChild(workspace.contents[content].node);
       }
 
@@ -1019,6 +1025,8 @@
           clearBtn.type = 'button';
           clearBtn.className = 'tile-action-btn';
           clearBtn.textContent = '×';
+          clearBtn.title = 'Remove panel';
+          clearBtn.setAttribute('aria-label', 'Remove this panel');
           clearBtn.addEventListener('click', function () {
             clearTile(tile.id);
           });
