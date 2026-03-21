@@ -657,11 +657,10 @@
         codeToolbar.appendChild(codeLanguage);
         codeBundle.appendChild(codeToolbar);
       }
-      if (codeTrace) {
-        codeBundle.appendChild(codeTrace);
-      } else if (codeTraceContainer) {
-        codeBundle.appendChild(codeTraceContainer);
-      }
+      var codeTraceWrapper = document.createElement('div');
+      codeTraceWrapper.className = 'code-trace-container';
+      codeTraceWrapper.id = 'codeTraceContainer';
+      codeBundle.appendChild(codeTraceWrapper);
       if (codeNote) {
         codeBundle.appendChild(codeNote);
       }
@@ -822,6 +821,16 @@
       });
 
       tileEl.appendChild(picker);
+
+      function closePicker(e) {
+        if (!picker.contains(e.target)) {
+          picker.remove();
+          document.removeEventListener('click', closePicker);
+        }
+      }
+      setTimeout(function() {
+        document.addEventListener('click', closePicker);
+      }, 0);
     }
 
     function clearTile(tileId) {

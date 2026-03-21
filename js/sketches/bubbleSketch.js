@@ -169,19 +169,27 @@
           var alpha = 255;
 
           if (animating && swapState && (i === swapState.left || i === swapState.right)) {
-            var rise = phaseProgress(animFrame, 0, SWAP_FRAMES * 0.35);
-            var cross = phaseProgress(animFrame, SWAP_FRAMES * 0.25, SWAP_FRAMES * 0.75);
-            var settle = phaseProgress(animFrame, SWAP_FRAMES * 0.65, SWAP_FRAMES);
+            var t = animFrame / SWAP_FRAMES;
             var swapTargetIndex = i === swapState.left ? swapState.right : swapState.left;
             var targetX = paddingSides + swapTargetIndex * (barW + barGap);
             
-            var arcHeight = 45;
-            var riseOffset = easeInOut(rise) * arcHeight;
-            var settleOffset = (1 - easeInOut(settle)) * arcHeight;
-            var totalYOffset = riseOffset + settleOffset;
+            var arcHeight = 55;
+            var overshoot = 1.15;
             
-            x = p.lerp(x, targetX, easeInOut(cross));
-            y -= totalYOffset;
+            var easeT = t < 0.5 
+              ? 4 * t * t * t 
+              : 1 - Math.pow(-2 * t + 2, 3) / 2;
+            
+            var arcT = Math.sin(easeT * Math.PI);
+            var yOffset = arcT * arcHeight;
+            
+            var xEase = t < 0.8 
+              ? easeInOut(t / 0.8) 
+              : easeInOut(1 + (t - 0.8) / 0.2 * (overshoot - 1)) * (1 - (t - 0.8) / 0.2) + (t - 0.8) / 0.2;
+            xEase = clamp(xEase, 0, 1);
+            
+            x = p.lerp(x, targetX, xEase);
+            y -= yOffset;
           } else if (pulseState && pulseState.indices.indexOf(i) !== -1) {
             var pulseT = pulseState.frame / Math.max(1, PULSE_FRAMES - 1);
             var pulseStrength = pulseT < 0.5 ? pulseT * 2 : (1 - pulseT) * 2;
