@@ -1,71 +1,94 @@
 # Sorting Simulations
 
-This folder contains four self-contained HTML simulations:
+Sort Lab is a no-build sorting visualizer built with plain HTML, CSS, JavaScript, and local p5.js.
+
+It includes:
 
 - Bubble Sort
 - Selection Sort
 - Insertion Sort
-- Compare All (side-by-side race)
+- Compare All
 
-Each simulation is designed for non-coders:
+The current version uses a shared shell and p5-based bar rendering so every simulation page has the same layout, controls, and code-trace behavior.
 
-- clear color legends
-- plain-language step narration
-- live counters (passes, comparisons, swaps/shifts)
-- play, pause, step forward/back, reset
-- scenario presets (best, average, worst, nearly sorted)
-- custom input arrays
-- faster playback controls (slider plus Normal/Fast/Turbo presets)
+## Highlights
 
-## Files
+- Smooth lerp-based bar animation in p5.js
+- Shared three-column simulation layout across all algorithm pages
+- Live code trace for pseudocode, Java, C++, and Python
+- Play, pause, next, previous, and reset controls
+- Speed slider plus Normal, Fast, and Turbo presets
+- Random, reversed, nearly sorted, and few-unique input patterns
+- Theme switcher with persisted selection
+- Present mode for projection or classroom demos
+- Direct `file://` support with no server required
 
-- `index.html` - landing page and quick algorithm comparison
-- `bubble_sort_simulation.html`
-- `selection_sort_simulation.html`
-- `insertion_sort_simulation.html`
-- `compare_all_simulation.html` - runs all 3 algorithms together on one array
-- `run-local.sh` - quick local server script for Linux/macOS
-- `run-local.bat` - quick local server script for Windows
-- `SortingAlgorithms_SimulationPlan.md` - original implementation plan
+## Project Structure
 
-## Quick Start (Clone)
+- `index.html` - home page
+- `bubble.html` - Bubble Sort simulation
+- `selection.html` - Selection Sort simulation
+- `insertion.html` - Insertion Sort simulation
+- `compare.html` - synchronized comparison page
+- `css/theme.css` - theme variables
+- `css/shell.css` - shared layout, controls, code trace, present mode
+- `js/shell.js` - nav injection, theme persistence, present mode, panel collapse
+- `js/controls.js` - shared playback and array generation logic
+- `js/codeTrace.js` - shared code trace renderer and line highlighting
+- `js/algorithms/` - step generators, code strings, and line maps
+- `js/sketches/` - p5 sketches for each simulation view
+- `lib/p5.min.js` - local p5.js runtime
 
-```bash
-git clone <your-repo-url>
-cd sorting-simulation
-bash run-local.sh
-```
+## Quick Start
 
-Then open `http://localhost:8080`.
+Open `index.html` directly in a modern browser.
 
-## Quick Start (ZIP Download)
+You can also open `bubble.html`, `selection.html`, `insertion.html`, or `compare.html` directly.
 
-1. Download and extract the ZIP.
-2. Open a terminal in the extracted `sorting-simulation` folder.
-3. Start a local server:
+No npm install, bundler, or local dev server is required.
 
-   - Linux/macOS: `bash run-local.sh`
-   - Windows: `run-local.bat`
+## Local p5.js Runtime
 
-4. Open `http://localhost:8080`.
+The app expects p5.js at `lib/p5.min.js`.
 
-## Manual Run (No Scripts)
+If that file is missing, download p5.js v1.9.4 from:
 
-No build tools are required.
+`https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js`
 
-1. Open `index.html` in a modern browser.
-2. Click any algorithm card (including Compare All).
+and save it as:
 
-You can also open each simulation HTML file directly.
+`lib/p5.min.js`
 
-## Input Notes
+## Controls
 
-- Custom input must be comma-separated numbers.
-- Supported size: 5 to 20 values.
-- Supported value range: 1 to 999.
+- `Play` / `Pause` - run or stop playback
+- `Prev` / `Next` - step backward or forward
+- `Reset` - return to step 1 of the current array
+- `Generate Array` - create a new array from the selected size and pattern
+- `Present` - hide side panels and navigation for fullscreen-style demos
 
-## Teaching Tips
+## Input Options
 
-- Start with a small array (8-10 values) and slower speed.
-- Use Step Forward while narrating what each color means.
-- Try a nearly sorted input to observe how insertion and bubble can behave faster.
+- Array size: 6 to 18 values
+- Patterns: Random, Reversed, Nearly Sorted, Few Unique
+- Compare All uses the same starting array for all three algorithms
+
+## Themes
+
+Available themes:
+
+- Dark
+- Light
+- Ocean
+- Forest
+
+The selected theme is stored in `localStorage` and persists across page navigation.
+
+## Optional Local Server
+
+The included helper scripts still work if you prefer serving the files locally:
+
+- `run-local.sh`
+- `run-local.bat`
+
+They are optional because the project is designed to work without a server.
