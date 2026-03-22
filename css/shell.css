@@ -1669,6 +1669,16 @@ body.is-fullscreen .float-panel {
   cursor: col-resize;
 }
 
+.tile-edge-top {
+  top: -4px;
+  left: 8px;
+  height: 8px;
+  width: calc(100% - 16px);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 50%, var(--surface-2));
+  cursor: row-resize;
+}
+
 .tile-edge-bottom {
   bottom: -4px;
   left: 8px;
@@ -1681,8 +1691,56 @@ body.is-fullscreen .float-panel {
 
 .tile-edge-right:hover,
 .tile-edge-right:active,
+.tile-edge-top:hover,
+.tile-edge-top:active,
 .tile-edge-bottom:hover,
 .tile-edge-bottom:active {
   background: var(--accent);
   opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HIDE TILE HEADERS MODE
+   body.tiles-no-headers hides all tile title bars
+   ═══════════════════════════════════════════════════════ */
+
+body.tiles-no-headers .tile-header {
+  display: none;
+}
+
+body.tiles-no-headers .tile-card {
+  grid-template-rows: minmax(0, 1fr);
+  border-radius: 22px;
+}
+
+body.tiles-no-headers .tile-body {
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SNAP TILES FLUSH MODE
+   body.tiles-snap-gap collapses inter-tile gap to 0
+   and removes card border-radius so edges meet cleanly
+   ═══════════════════════════════════════════════════════ */
+
+body.tiles-snap-gap .tile-workspace {
+  gap: 2px;
+}
+
+body.tiles-snap-gap .tile-card {
+  border-radius: 6px;
+}
+
+body.tiles-snap-gap .tile-header {
+  border-radius: 6px 6px 0 0;
+}
+
+body.tiles-snap-gap .tile-body {
+  border-radius: 0 0 6px 6px;
+}
+
+body.tiles-snap-gap.tiles-no-headers .tile-card,
+body.tiles-snap-gap.tiles-no-headers .tile-body {
+  border-radius: 6px;
 }

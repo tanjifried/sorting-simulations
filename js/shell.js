@@ -405,7 +405,7 @@
     if (page.step < 0) return; // home page — no panel needed
 
     // ── Read persisted visibility settings ──
-    var defaultVis = { controls: true, speed: true, panels: true, legend: true };
+    var defaultVis = { controls: true, speed: true, panels: true, legend: true, hideHeaders: false, snapGap: false };
     var vis = defaultVis;
     try {
       var saved = JSON.parse(localStorage.getItem(PANEL_VIS_KEY) || 'null');
@@ -422,6 +422,10 @@
       var savedPos = JSON.parse(localStorage.getItem(PANEL_POS_KEY) || 'null');
       if (savedPos && typeof savedPos.x === 'number') pos = savedPos;
     } catch (e) {}
+
+    // Clamp to viewport on load
+    pos.x = Math.max(0, Math.min(window.innerWidth - 60, pos.x));
+    pos.y = Math.max(0, Math.min(window.innerHeight - 40, pos.y));
 
     function savePos() { localStorage.setItem(PANEL_POS_KEY, JSON.stringify(pos)); }
 
@@ -493,6 +497,47 @@
       row.appendChild(lbl);
       settingsPane.appendChild(row);
     });
+
+    // ── Layout options separator ──
+    var layoutTitle = document.createElement('div');
+    layoutTitle.className = 'float-settings-title';
+    layoutTitle.style.marginTop = '0.75rem';
+    layoutTitle.textContent = 'Layout Options';
+    settingsPane.appendChild(layoutTitle);
+
+    // Hide tile headers toggle
+    var hideHeaderRow = document.createElement('label');
+    hideHeaderRow.className = 'float-settings-row';
+    var hideHeaderCb = document.createElement('input');
+    hideHeaderCb.type = 'checkbox';
+    hideHeaderCb.checked = vis.hideHeaders;
+    hideHeaderCb.addEventListener('change', function () {
+      vis.hideHeaders = hideHeaderCb.checked;
+      saveVis();
+      applyVisibility();
+    });
+    var hideHeaderLbl = document.createElement('span');
+    hideHeaderLbl.textContent = 'Hide tile title bars';
+    hideHeaderRow.appendChild(hideHeaderCb);
+    hideHeaderRow.appendChild(hideHeaderLbl);
+    settingsPane.appendChild(hideHeaderRow);
+
+    // Snap tiles together toggle
+    var snapRow = document.createElement('label');
+    snapRow.className = 'float-settings-row';
+    var snapCb = document.createElement('input');
+    snapCb.type = 'checkbox';
+    snapCb.checked = vis.snapGap;
+    snapCb.addEventListener('change', function () {
+      vis.snapGap = snapCb.checked;
+      saveVis();
+      applyVisibility();
+    });
+    var snapLbl = document.createElement('span');
+    snapLbl.textContent = 'Snap tiles flush together';
+    snapRow.appendChild(snapCb);
+    snapRow.appendChild(snapLbl);
+    settingsPane.appendChild(snapRow);
 
     settingsBtn.addEventListener('click', function (e) {
       e.stopPropagation();
@@ -626,6 +671,8 @@
       Object.keys(sections).forEach(function (key) {
         sections[key].hidden = !vis[key];
       });
+      document.body.classList.toggle('tiles-no-headers', !!vis.hideHeaders);
+      document.body.classList.toggle('tiles-snap-gap', !!vis.snapGap);
     }
     applyVisibility();
 
@@ -634,6 +681,14 @@
     shellState.floatSections = sections;
     shellState.floatVis = vis;
     shellState.applyFloatVisibility = applyVisibility;
+
+    // Keep panel in viewport when window is resized
+    window.addEventListener('resize', function () {
+      pos.x = Math.max(0, Math.min(window.innerWidth - 60, pos.x));
+      pos.y = Math.max(0, Math.min(window.innerHeight - 40, pos.y));
+      panel.style.left = pos.x + 'px';
+      panel.style.top = pos.y + 'px';
+    });
   }
 
   function installPanelDrag(panel, handle, pos, onSave) {
@@ -683,7 +738,7 @@
 
     var brandVersion = document.createElement('span');
     brandVersion.className = 'topnav-version';
-    brandVersion.textContent = 'v1.3.1';
+    brandVersion.textContent = 'v1.4.0';
 
     brand.appendChild(brandName);
     brand.appendChild(brandVersion);
@@ -1453,8 +1508,8 @@
         }
 
         // ── Edge resize handles ──
-        // Right edge: resize column
-        if (workspace.layout.cols > 1 && tile.col < workspace.layout.cols) {
+        // Right edge: resize column — show if there's a tile to the right
+        if (tile.col < workspace.layout.cols) {
           var rHandle = document.createElement('div');
           rHandle.className = 'tile-edge-handle tile-edge-right';
           rHandle.setAttribute('aria-label', 'Resize column');
@@ -1462,6 +1517,16 @@
             installEdgeDrag(rHandle, 'col', colIndex, workspace, buildTrackTemplate, saveLayout, renderWorkspace, dispatchSyntheticResize);
           }(tile.col - 1));
           tileEl.appendChild(rHandle);
+        }
+        // Top edge: resize the row above — show if this tile is not in the first row
+        if (tile.row > 1) {
+          var tHandle = document.createElement('div');
+          tHandle.className = 'tile-edge-handle tile-edge-top';
+          tHandle.setAttribute('aria-label', 'Resize row');
+          (function (rowIndex) {
+            installEdgeDrag(tHandle, 'row', rowIndex, workspace, buildTrackTemplate, saveLayout, renderWorkspace, dispatchSyntheticResize);
+          }(tile.row - 2));
+          tileEl.appendChild(tHandle);
         }
         // Bottom edge: resize this tile height
         {
