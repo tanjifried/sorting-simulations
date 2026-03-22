@@ -683,7 +683,7 @@
 
     var brandVersion = document.createElement('span');
     brandVersion.className = 'topnav-version';
-    brandVersion.textContent = 'v1.2.0';
+    brandVersion.textContent = 'v1.3.1';
 
     brand.appendChild(brandName);
     brand.appendChild(brandVersion);
@@ -769,7 +769,7 @@
       rows: 1,
       colSizes: ['1fr'],
       rowSizes: ['1fr'],
-      tiles: [{ id: 't0', col: 1, row: 1, content: defaultContent }],
+      tiles: [{ id: 't0', col: 1, row: 1, content: defaultContent, height: null }],
       nextId: 1,
     };
   }
@@ -797,16 +797,18 @@
     layout.tiles.slice(0, 6).forEach(function (tile) {
       var idNum = Number(String(tile.id || '').replace(/[^0-9]/g, ''));
       nextId = Math.max(nextId, isNaN(idNum) ? 0 : idNum + 1);
+      var rawHeight = Number(tile.height);
       normalized.tiles.push({
         id: tile.id || ('t' + nextId),
         col: Math.max(1, Math.min(normalized.cols, Number(tile.col) || 1)),
         row: Math.max(1, Math.min(normalized.rows, Number(tile.row) || 1)),
         content: allowed.indexOf(tile.content) !== -1 ? tile.content : 'empty',
+        height: isNaN(rawHeight) || rawHeight < 160 ? null : Math.round(rawHeight),
       });
     });
 
     if (!normalized.tiles.length) {
-      normalized.tiles.push({ id: 't0', col: 1, row: 1, content: availableContents.visualizer ? 'visualizer' : 'empty' });
+      normalized.tiles.push({ id: 't0', col: 1, row: 1, content: availableContents.visualizer ? 'visualizer' : 'empty', height: null });
     }
 
     if (!normalized.tiles.some(function (tile) { return tile.content !== 'empty'; })) {
@@ -1068,6 +1070,66 @@
       renderWorkspace();
     }
 
+    function pruneEmptyTracks() {
+      while (workspace.layout.rows > 1) {
+        var hasLastRow = workspace.layout.tiles.some(function (tile) {
+          return tile.row === workspace.layout.rows;
+        });
+        if (hasLastRow) {
+          break;
+        }
+        workspace.layout.rows -= 1;
+        workspace.layout.rowSizes.pop();
+      }
+
+      while (workspace.layout.cols > 1) {
+        var hasLastCol = workspace.layout.tiles.some(function (tile) {
+          return tile.col === workspace.layout.cols;
+        });
+        if (hasLastCol) {
+          break;
+        }
+        workspace.layout.cols -= 1;
+        workspace.layout.colSizes.pop();
+      }
+
+      while (workspace.layout.colSizes.length < workspace.layout.cols) {
+        workspace.layout.colSizes.push('1fr');
+      }
+      while (workspace.layout.rowSizes.length < workspace.layout.rows) {
+        workspace.layout.rowSizes.push('1fr');
+      }
+    }
+
+    function removeTile(tileId) {
+      var index = -1;
+      for (var i = 0; i < workspace.layout.tiles.length; i += 1) {
+        if (workspace.layout.tiles[i].id === tileId) {
+          index = i;
+          break;
+        }
+      }
+
+      if (index === -1) {
+        return;
+      }
+
+      if (workspace.layout.tiles.length <= 1) {
+        clearTile(tileId);
+        return;
+      }
+
+      var tile = workspace.layout.tiles[index];
+      if (tile.content && tile.content !== 'empty') {
+        returnContentToStash(tile.content);
+      }
+
+      workspace.layout.tiles.splice(index, 1);
+      pruneEmptyTracks();
+      saveLayout();
+      renderWorkspace();
+    }
+
     function splitTile(tileId) {
       if (workspace.layout.tiles.length >= 6) {
         return;
@@ -1118,7 +1180,7 @@
         return;
       }
 
-      workspace.layout.tiles.push({ id: nextTileId(), col: target.col, row: target.row, content: 'empty' });
+      workspace.layout.tiles.push({ id: nextTileId(), col: target.col, row: target.row, content: 'empty', height: null });
       saveLayout();
       renderWorkspace();
     }
@@ -1226,12 +1288,57 @@
       });
     }
 
+    function installTileHeightDrag(handle, tileId) {
+      handle.addEventListener('pointerdown', function (event) {
+        if (event.button !== 0) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+
+        var tile = findTile(tileId);
+        var tileEl = workspace.root.querySelector('[data-tile-id="' + tileId + '"]');
+        if (!tile || !tileEl) {
+          return;
+        }
+
+        handle.setPointerCapture(event.pointerId);
+        var startHeight = tileEl.getBoundingClientRect().height;
+        var pointerStart = event.clientY;
+        var nextHeight = startHeight;
+        var maxHeight = Math.max(320, window.innerHeight - 140);
+
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+
+        function onMove(moveEvent) {
+          var delta = moveEvent.clientY - pointerStart;
+          nextHeight = clamp(startHeight + delta, 160, maxHeight);
+          tileEl.style.height = Math.round(nextHeight) + 'px';
+          dispatchSyntheticResize(0);
+        }
+
+        function onUp() {
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          handle.removeEventListener('pointermove', onMove);
+          handle.removeEventListener('pointerup', onUp);
+          handle.removeEventListener('pointercancel', onUp);
+          tile.height = Math.round(nextHeight);
+          saveLayout();
+          renderWorkspace();
+        }
+
+        handle.addEventListener('pointermove', onMove);
+        handle.addEventListener('pointerup', onUp);
+        handle.addEventListener('pointercancel', onUp);
+      });
+    }
+
     function renderGutters() {
       var computed = getComputedStyle(workspace.root);
       var colPixels = parseTrackPixels(computed.gridTemplateColumns);
-      var rowPixels = parseTrackPixels(computed.gridTemplateRows);
       var x = 0;
-      var y = 0;
 
       for (var i = 0; i < colPixels.length - 1; i += 1) {
         x += colPixels[i];
@@ -1244,16 +1351,6 @@
         workspace.root.appendChild(colGutter);
       }
 
-      for (var j = 0; j < rowPixels.length - 1; j += 1) {
-        y += rowPixels[j];
-        var rowGutter = document.createElement('div');
-        rowGutter.className = 'tile-gutter tile-gutter-row';
-        rowGutter.style.top = (y - 3) + 'px';
-        rowGutter.style.left = '0';
-        rowGutter.style.width = '100%';
-        installGutterDrag(rowGutter, 'row', j);
-        workspace.root.appendChild(rowGutter);
-      }
     }
 
     function renderWorkspace() {
@@ -1277,6 +1374,9 @@
         tileEl.dataset.tileContent = tile.content;
         tileEl.style.gridColumn = String(tile.col);
         tileEl.style.gridRow = String(tile.row);
+        if (tile.height && tile.height >= 160) {
+          tileEl.style.height = Math.round(tile.height) + 'px';
+        }
 
         if (tile.content === 'empty') {
           tileEl.classList.add('empty');
@@ -1291,7 +1391,7 @@
           (function (tileId) {
             emptyRemoveBtn.addEventListener('click', function (e) {
               e.stopPropagation();
-              clearTile(tileId);
+              removeTile(tileId);
             });
           }(tile.id));
           tileEl.appendChild(emptyRemoveBtn);
@@ -1363,14 +1463,14 @@
           }(tile.col - 1));
           tileEl.appendChild(rHandle);
         }
-        // Bottom edge: resize row
-        if (workspace.layout.rows > 1 && tile.row < workspace.layout.rows) {
+        // Bottom edge: resize this tile height
+        {
           var bHandle = document.createElement('div');
           bHandle.className = 'tile-edge-handle tile-edge-bottom';
-          bHandle.setAttribute('aria-label', 'Resize row');
-          (function (rowIndex) {
-            installEdgeDrag(bHandle, 'row', rowIndex, workspace, buildTrackTemplate, saveLayout, renderWorkspace, dispatchSyntheticResize);
-          }(tile.row - 1));
+          bHandle.setAttribute('aria-label', 'Resize panel height');
+          (function (id) {
+            installTileHeightDrag(bHandle, id);
+          }(tile.id));
           tileEl.appendChild(bHandle);
         }
 
@@ -1497,7 +1597,7 @@
             workspace.layout.rowSizes.push('1fr');
             var newId = 't' + workspace.layout.nextId;
             workspace.layout.nextId += 1;
-            workspace.layout.tiles.push({ id: newId, col: 1, row: newRow, content: contentKey });
+            workspace.layout.tiles.push({ id: newId, col: 1, row: newRow, content: contentKey, height: null });
             workspace.saveLayout();
             workspace.render();
           }
