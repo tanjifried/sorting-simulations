@@ -720,7 +720,7 @@
 
     var brandVersion = document.createElement('span');
     brandVersion.className = 'topnav-version';
-    brandVersion.textContent = 'v1.4.0';
+    brandVersion.textContent = 'v1.4.1';
 
     brand.appendChild(brandName);
     brand.appendChild(brandVersion);
