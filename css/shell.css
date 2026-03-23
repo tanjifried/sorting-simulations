@@ -1186,16 +1186,6 @@ input:focus-visible {
   margin: 0;
 }
 
-/* ── POLISH: Narration inside tile has no top margin ── */
-.tile-body .narration-banner {
-  margin-top: 0;
-}
-
-/* ── POLISH: Stats row inside tile has no top margin ── */
-.tile-body .stats-row {
-  margin-top: 0;
-}
-
 /* ── POLISH: Code note styling ── */
 .code-note {
   font-family: 'DM Mono', monospace;
@@ -1700,28 +1690,58 @@ body.is-fullscreen .float-panel {
 }
 
 /* ═══════════════════════════════════════════════════════
-   HIDE TILE HEADERS MODE
-   body.tiles-no-headers hides all tile title bars
+   PER-TILE HIDE HEADER
+   .tile-header-hidden hides the title bar for that tile only.
+   Eye button in the header corner triggers it; a tiny
+   hover-reveal restore strip appears at the top edge.
    ═══════════════════════════════════════════════════════ */
 
-body.tiles-no-headers .tile-header {
+.tile-card.tile-header-hidden .tile-header {
   display: none;
 }
 
-body.tiles-no-headers .tile-card {
+.tile-card.tile-header-hidden {
   grid-template-rows: minmax(0, 1fr);
-  border-radius: 22px;
 }
 
-body.tiles-no-headers .tile-body {
+.tile-card.tile-header-hidden .tile-body {
   border-radius: 22px;
   overflow: hidden;
 }
 
+/* Hover-reveal restore bar at the top of a header-hidden tile */
+.tile-card.tile-header-hidden::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 10;
+  background: transparent;
+  border-radius: 22px 22px 0 0;
+  transition: background 160ms ease;
+  cursor: pointer;
+}
+
+.tile-card.tile-header-hidden:hover::before {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* ── hide-header-btn (eye icon in tile actions) ── */
+.hide-header-btn {
+  opacity: 0.55;
+  transition: opacity 140ms ease, border-color 140ms, color 140ms, background 140ms;
+}
+
+.tile-card:hover .hide-header-btn,
+.hide-header-btn:hover {
+  opacity: 1;
+}
+
 /* ═══════════════════════════════════════════════════════
    SNAP TILES FLUSH MODE
-   body.tiles-snap-gap collapses inter-tile gap to 0
-   and removes card border-radius so edges meet cleanly
+   body.tiles-snap-gap collapses inter-tile gap to near-zero
    ═══════════════════════════════════════════════════════ */
 
 body.tiles-snap-gap .tile-workspace {
@@ -1740,7 +1760,52 @@ body.tiles-snap-gap .tile-body {
   border-radius: 0 0 6px 6px;
 }
 
-body.tiles-snap-gap.tiles-no-headers .tile-card,
-body.tiles-snap-gap.tiles-no-headers .tile-body {
+body.tiles-snap-gap .tile-card.tile-header-hidden,
+body.tiles-snap-gap .tile-card.tile-header-hidden .tile-body {
   border-radius: 6px;
 }
+
+/* ═══════════════════════════════════════════════════════
+   CONTENT NODE CLEANUP INSIDE TILE BODY
+   Narration, stats, and legend already have their own
+   card chrome. Strip double backgrounds/borders/margins
+   when they live inside a tile body.
+   ═══════════════════════════════════════════════════════ */
+
+/* Narration: remove its own card background + border + margin */
+.tile-body .narration-banner {
+  margin: 0;
+  border-radius: 0;
+  border-left: 3px solid var(--accent);
+  background: transparent;
+  padding: 1rem 1.1rem;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* Stats row: remove top margin, let it breathe with just padding */
+.tile-body .stats-row {
+  margin: 0;
+  padding: 0.9rem;
+  height: 100%;
+  box-sizing: border-box;
+  align-content: start;
+}
+
+/* Individual stat cards keep their own styling — just remove outer margin */
+.tile-body .stat {
+  margin: 0;
+}
+
+/* Legend / how-section: strip card chrome */
+.tile-body .how-section {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  background: transparent;
+  border: none;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+

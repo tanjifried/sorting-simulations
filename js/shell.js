@@ -505,23 +505,6 @@
     layoutTitle.textContent = 'Layout Options';
     settingsPane.appendChild(layoutTitle);
 
-    // Hide tile headers toggle
-    var hideHeaderRow = document.createElement('label');
-    hideHeaderRow.className = 'float-settings-row';
-    var hideHeaderCb = document.createElement('input');
-    hideHeaderCb.type = 'checkbox';
-    hideHeaderCb.checked = vis.hideHeaders;
-    hideHeaderCb.addEventListener('change', function () {
-      vis.hideHeaders = hideHeaderCb.checked;
-      saveVis();
-      applyVisibility();
-    });
-    var hideHeaderLbl = document.createElement('span');
-    hideHeaderLbl.textContent = 'Hide tile title bars';
-    hideHeaderRow.appendChild(hideHeaderCb);
-    hideHeaderRow.appendChild(hideHeaderLbl);
-    settingsPane.appendChild(hideHeaderRow);
-
     // Snap tiles together toggle
     var snapRow = document.createElement('label');
     snapRow.className = 'float-settings-row';
@@ -671,7 +654,6 @@
       Object.keys(sections).forEach(function (key) {
         sections[key].hidden = !vis[key];
       });
-      document.body.classList.toggle('tiles-no-headers', !!vis.hideHeaders);
       document.body.classList.toggle('tiles-snap-gap', !!vis.snapGap);
     }
     applyVisibility();
@@ -824,7 +806,7 @@
       rows: 1,
       colSizes: ['1fr'],
       rowSizes: ['1fr'],
-      tiles: [{ id: 't0', col: 1, row: 1, content: defaultContent, height: null }],
+      tiles: [{ id: 't0', col: 1, row: 1, content: defaultContent, height: null, hideHeader: false }],
       nextId: 1,
     };
   }
@@ -859,6 +841,7 @@
         row: Math.max(1, Math.min(normalized.rows, Number(tile.row) || 1)),
         content: allowed.indexOf(tile.content) !== -1 ? tile.content : 'empty',
         height: isNaN(rawHeight) || rawHeight < 160 ? null : Math.round(rawHeight),
+        hideHeader: !!tile.hideHeader,
       });
     });
 
@@ -1235,7 +1218,7 @@
         return;
       }
 
-      workspace.layout.tiles.push({ id: nextTileId(), col: target.col, row: target.row, content: 'empty', height: null });
+      workspace.layout.tiles.push({ id: nextTileId(), col: target.col, row: target.row, content: 'empty', height: null, hideHeader: false });
       saveLayout();
       renderWorkspace();
     }
@@ -1390,6 +1373,53 @@
       });
     }
 
+    // Drag the top edge of a tile — grows tile upward, shrinks when dragged down.
+    // Works by adjusting tile.height independently, mirroring installTileHeightDrag
+    // but with inverted delta direction.
+    function installTileTopDrag(handle, tileId) {
+      handle.addEventListener('pointerdown', function (event) {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        var tile = findTile(tileId);
+        var tileEl = workspace.root.querySelector('[data-tile-id="' + tileId + '"]');
+        if (!tile || !tileEl) return;
+
+        handle.setPointerCapture(event.pointerId);
+        var startHeight = tileEl.getBoundingClientRect().height;
+        var pointerStart = event.clientY;
+        var nextHeight = startHeight;
+        var maxHeight = Math.max(320, window.innerHeight - 140);
+
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+
+        function onMove(moveEvent) {
+          // Dragging up (negative delta) increases height; dragging down shrinks it
+          var delta = pointerStart - moveEvent.clientY;
+          nextHeight = clamp(startHeight + delta, 160, maxHeight);
+          tileEl.style.height = Math.round(nextHeight) + 'px';
+          dispatchSyntheticResize(0);
+        }
+
+        function onUp() {
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          handle.removeEventListener('pointermove', onMove);
+          handle.removeEventListener('pointerup', onUp);
+          handle.removeEventListener('pointercancel', onUp);
+          tile.height = Math.round(nextHeight);
+          saveLayout();
+          renderWorkspace();
+        }
+
+        handle.addEventListener('pointermove', onMove);
+        handle.addEventListener('pointerup', onUp);
+        handle.addEventListener('pointercancel', onUp);
+      });
+    }
+
     function renderGutters() {
       var computed = getComputedStyle(workspace.root);
       var colPixels = parseTrackPixels(computed.gridTemplateColumns);
@@ -1431,6 +1461,9 @@
         tileEl.style.gridRow = String(tile.row);
         if (tile.height && tile.height >= 160) {
           tileEl.style.height = Math.round(tile.height) + 'px';
+        }
+        if (tile.hideHeader) {
+          tileEl.classList.add('tile-header-hidden');
         }
 
         if (tile.content === 'empty') {
@@ -1494,6 +1527,25 @@
           }(tile.id));
 
           actions.appendChild(splitBtn);
+
+          var hideHdrBtn = document.createElement('button');
+          hideHdrBtn.type = 'button';
+          hideHdrBtn.className = 'tile-action-btn hide-header-btn';
+          hideHdrBtn.title = tile.hideHeader ? 'Show title bar' : 'Hide title bar';
+          hideHdrBtn.setAttribute('aria-label', tile.hideHeader ? 'Show title bar' : 'Hide title bar');
+          // Eye icon — open eye = header visible, slashed = hidden
+          hideHdrBtn.innerHTML = tile.hideHeader
+            ? '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2l12 12M6.5 6.6A3 3 0 0 0 9.4 9.5M4.2 4.3C2.8 5.2 1.7 6.5 1 8c1.3 3 4.2 5 7 5 1.3 0 2.6-.4 3.7-1.1M6 3.1C6.6 3 7.3 3 8 3c2.8 0 5.7 2 7 5a9.4 9.4 0 0 1-1.7 2.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'
+            : '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="8" cy="8" rx="7" ry="5" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/></svg>';
+          (function (t, el) {
+            hideHdrBtn.addEventListener('click', function () {
+              t.hideHeader = !t.hideHeader;
+              saveLayout();
+              renderWorkspace();
+            });
+          }(tile, tileEl));
+
+          actions.appendChild(hideHdrBtn);
           actions.appendChild(clearBtn);
           header.appendChild(label);
           header.appendChild(actions);
@@ -1518,14 +1570,14 @@
           }(tile.col - 1));
           tileEl.appendChild(rHandle);
         }
-        // Top edge: resize the row above — show if this tile is not in the first row
+        // Top edge: resize this tile's own height from the top (inverse drag)
         if (tile.row > 1) {
           var tHandle = document.createElement('div');
           tHandle.className = 'tile-edge-handle tile-edge-top';
-          tHandle.setAttribute('aria-label', 'Resize row');
-          (function (rowIndex) {
-            installEdgeDrag(tHandle, 'row', rowIndex, workspace, buildTrackTemplate, saveLayout, renderWorkspace, dispatchSyntheticResize);
-          }(tile.row - 2));
+          tHandle.setAttribute('aria-label', 'Resize panel height from top');
+          (function (id) {
+            installTileTopDrag(tHandle, id);
+          }(tile.id));
           tileEl.appendChild(tHandle);
         }
         // Bottom edge: resize this tile height
@@ -1662,7 +1714,7 @@
             workspace.layout.rowSizes.push('1fr');
             var newId = 't' + workspace.layout.nextId;
             workspace.layout.nextId += 1;
-            workspace.layout.tiles.push({ id: newId, col: 1, row: newRow, content: contentKey, height: null });
+            workspace.layout.tiles.push({ id: newId, col: 1, row: newRow, content: contentKey, height: null, hideHeader: false });
             workspace.saveLayout();
             workspace.render();
           }
