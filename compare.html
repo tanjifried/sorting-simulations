@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Compare All - Sort Lab</title>
+  <title>Compare Mode - Sort Lab</title>
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/shell.css">
 </head>
@@ -12,7 +12,7 @@
     <div class="sim-layout compare-layout">
       <aside class="left-panel" id="leftPanel">
         <div class="panel-header">
-          <span class="algo-badge">Compare All</span>
+          <span class="algo-badge">Competition Mode</span>
           <button class="collapse-btn" id="collapseLeftBtn" type="button">&lsaquo;</button>
         </div>
         <div class="panel-body">
@@ -49,6 +49,11 @@
           </section>
 
           <section class="control-group">
+            <h3>Panels</h3>
+            <button class="control-button" id="addLaneBtn" type="button">Add Algorithm Panel</button>
+          </section>
+
+          <section class="control-group">
             <h3>Speed</h3>
             <label class="control-field" for="speed">
               <span>Frame Delay</span>
@@ -65,81 +70,32 @@
       </aside>
 
       <main class="center-panel compare-center">
-        <div class="compare-stack">
-          <section class="compare-lane" id="bubbleLane">
-            <div class="lane-header">
-              <span class="lane-title">Bubble Sort</span>
-              <span class="lane-status" id="bubbleDone">Running</span>
-            </div>
-            <div class="canvas-container compact" id="bubbleCanvas" data-height="220"></div>
-            <div class="narration-banner compact" id="bubbleNarration">Waiting to begin.</div>
-            <div class="stats-row compact">
-              <div class="stat"><span class="stat-label">Step</span><b id="bubbleStep">0 / 0</b></div>
-              <div class="stat"><span class="stat-label">Comparisons</span><b id="bubbleComp">0</b></div>
-              <div class="stat"><span class="stat-label">Swaps</span><b id="bubbleSwap">0</b></div>
-            </div>
-          </section>
-
-          <section class="compare-lane" id="selectionLane">
-            <div class="lane-header">
-              <span class="lane-title">Selection Sort</span>
-              <span class="lane-status" id="selectionDone">Running</span>
-            </div>
-            <div class="canvas-container compact" id="selectionCanvas" data-height="220"></div>
-            <div class="narration-banner compact" id="selectionNarration">Waiting to begin.</div>
-            <div class="stats-row compact">
-              <div class="stat"><span class="stat-label">Step</span><b id="selectionStep">0 / 0</b></div>
-              <div class="stat"><span class="stat-label">Comparisons</span><b id="selectionComp">0</b></div>
-              <div class="stat"><span class="stat-label">Swaps</span><b id="selectionSwap">0</b></div>
-            </div>
-          </section>
-
-          <section class="compare-lane" id="insertionLane">
-            <div class="lane-header">
-              <span class="lane-title">Insertion Sort</span>
-              <span class="lane-status" id="insertionDone">Running</span>
-            </div>
-            <div class="canvas-container compact" id="insertionCanvas" data-height="220"></div>
-            <div class="narration-banner compact" id="insertionNarration">Waiting to begin.</div>
-            <div class="stats-row compact">
-              <div class="stat"><span class="stat-label">Step</span><b id="insertionStep">0 / 0</b></div>
-              <div class="stat"><span class="stat-label">Comparisons</span><b id="insertionComp">0</b></div>
-              <div class="stat"><span class="stat-label">Shifts</span><b id="insertionShift">0</b></div>
-            </div>
-          </section>
+        <div id="comparePanel">
+          <div class="compare-stack" id="laneContainer">
+            <!-- Dynamic lanes injected here -->
+          </div>
         </div>
       </main>
 
       <aside class="right-panel" id="rightPanel">
         <div class="panel-header">
-          <span class="panel-title">Compare Snapshot</span>
+          <span class="panel-title">Race Summary</span>
           <button class="collapse-btn" id="collapseRightBtn" type="button">&rsaquo;</button>
         </div>
         <div class="panel-body">
           <div class="summary-card">
             <span class="summary-label">Shared Array</span>
-            <code id="sharedArrayView">[]</code>
+            <code id="sharedArrayView" style="font-size: 0.8rem;">[]</code>
           </div>
           <div class="summary-card">
             <span class="summary-label">Global Step</span>
             <b id="globalStep">0 / 0</b>
           </div>
-          <div class="compare-summary-grid">
-            <div class="summary-card">
-              <span class="summary-label">Bubble Finish</span>
-              <b id="bubbleFinish">Pending</b>
-            </div>
-            <div class="summary-card">
-              <span class="summary-label">Selection Finish</span>
-              <b id="selectionFinish">Pending</b>
-            </div>
-            <div class="summary-card">
-              <span class="summary-label">Insertion Finish</span>
-              <b id="insertionFinish">Pending</b>
-            </div>
+          <div class="compare-summary-grid" id="rankSummary">
+            <!-- Dynamic rank cards here -->
           </div>
           <div class="code-note">
-            Shared playback advances all three algorithms together. Finished lanes hold on their final step while the others continue.
+            Adaptive animations scale with speed to prevent bottlenecks during high-speed races.
           </div>
         </div>
       </aside>
@@ -159,6 +115,7 @@
   </div>
 
   <script src="lib/p5.min.js"></script>
+  <script src="js/updater.js"></script>
   <script src="js/algorithms/bubble.js"></script>
   <script src="js/algorithms/selection.js"></script>
   <script src="js/algorithms/insertion.js"></script>
@@ -167,24 +124,81 @@
   <script src="js/sketches/compareSketch.js"></script>
   <script>
     let sharedArray = SortLabControls.generateArray(10, 'random');
-    let bubbleSteps = [];
-    let selectionSteps = [];
-    let insertionSteps = [];
+    let lanes = []; // Array of { id, algoName, sketch, steps }
     let masterSteps = [];
+    let nextLaneId = 0;
 
-    const bubbleSketch = mountSketch('bubbleCanvas', 'bubble');
-    const selectionSketch = mountSketch('selectionCanvas', 'selection');
-    const insertionSketch = mountSketch('insertionCanvas', 'insertion');
+    const algoMap = {
+      'bubble': BubbleAlgorithm,
+      'selection': SelectionAlgorithm,
+      'insertion': InsertionAlgorithm
+    };
+
+    const laneContainer = document.getElementById('laneContainer');
+    const rankSummary = document.getElementById('rankSummary');
+
+    function createLane(algoName = 'bubble') {
+      const id = 'lane-' + (nextLaneId++);
+      const lane = { id, algoName, sketch: null, steps: [] };
+      
+      const section = document.createElement('section');
+      section.className = 'compare-lane';
+      section.id = id;
+      section.innerHTML = `
+        <div class="lane-header">
+          <div style="display:flex; align-items:center; gap:0.5rem; flex:1;">
+             <select class="lane-algo-select" data-lane-id="${id}">
+                <option value="bubble" ${algoName === 'bubble' ? 'selected' : ''}>Bubble Sort</option>
+                <option value="selection" ${algoName === 'selection' ? 'selected' : ''}>Selection Sort</option>
+                <option value="insertion" ${algoName === 'insertion' ? 'selected' : ''}>Insertion Sort</option>
+             </select>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <span class="lane-status" id="${id}-done">Running</span>
+            <button class="lane-remove-btn" type="button" data-lane-id="${id}">&times;</button>
+          </div>
+        </div>
+        <div class="canvas-container compact" id="${id}-canvas" data-height="220"></div>
+        <div class="narration-banner compact" id="${id}-narration">Waiting...</div>
+        <div class="stats-row compact">
+          <div class="stat"><span class="stat-label">Step</span><b id="${id}-step">0</b></div>
+          <div class="stat"><span class="stat-label">Comp</span><b id="${id}-comp">0</b></div>
+          <div class="stat"><span class="stat-label">Op</span><b id="${id}-op">0</b></div>
+        </div>
+      `;
+      laneContainer.appendChild(section);
+
+      lane.sketch = mountSketch(id + '-canvas', algoName);
+      
+      // Select change
+      section.querySelector('.lane-algo-select').addEventListener('change', (e) => {
+        lane.algoName = e.target.value;
+        if (lane.sketch) lane.sketch.destroy();
+        lane.sketch = mountSketch(id + '-canvas', lane.algoName);
+        controls.reset();
+      });
+
+      // Remove lane
+      section.querySelector('.lane-remove-btn').addEventListener('click', () => {
+        if (lanes.length <= 1) return; // Keep at least one
+        lanes = lanes.filter(l => l.id !== id);
+        lane.sketch.destroy();
+        section.remove();
+        controls.reset();
+      });
+
+      lanes.push(lane);
+      return lane;
+    }
 
     function rebuildStepSets(array) {
       sharedArray = array.slice();
-      bubbleSteps = BubbleAlgorithm.computeSteps(sharedArray);
-      selectionSteps = SelectionAlgorithm.computeSteps(sharedArray);
-      insertionSteps = InsertionAlgorithm.computeSteps(sharedArray);
-      const maxSteps = Math.max(bubbleSteps.length, selectionSteps.length, insertionSteps.length);
-      masterSteps = Array.from({ length: maxSteps }, function (_, index) {
-        return { index: index };
+      lanes.forEach(lane => {
+        lane.steps = algoMap[lane.algoName].computeSteps(sharedArray);
       });
+      
+      const maxSteps = Math.max(...lanes.map(l => l.steps.length), 1);
+      masterSteps = Array.from({ length: maxSteps }, (_, index) => ({ index }));
       return masterSteps;
     }
 
@@ -192,105 +206,81 @@
       return steps[Math.min(index, steps.length - 1)];
     }
 
-    function finishLabel(index, total) {
-      return index >= total - 1 ? 'Done' : 'Running';
-    }
-
     function finishRank(length, allLengths) {
-      var ordered = allLengths.slice().sort(function (a, b) {
-        return a - b;
-      });
+      const ordered = [...new Set(allLengths)].sort((a, b) => a - b);
       return ordered.indexOf(length) + 1;
     }
 
-    function applyLaneStep(sketch, steps, globalIndex, laneEl) {
-      var step = stepAt(steps, globalIndex);
-      sketch.applyStep(step);
-      if (step.type === 'done') {
-        laneEl.classList.add('lane-done');
-      } else {
-        laneEl.classList.remove('lane-done');
-      }
-    }
-
-    const bubbleLane = document.getElementById('bubbleLane');
-    const selectionLane = document.getElementById('selectionLane');
-    const insertionLane = document.getElementById('insertionLane');
-
     const sketchGroup = {
       applyStep: function (step) {
-        const idx = step.index;
-        applyLaneStep(bubbleSketch, bubbleSteps, idx, bubbleLane);
-        applyLaneStep(selectionSketch, selectionSteps, idx, selectionLane);
-        applyLaneStep(insertionSketch, insertionSteps, idx, insertionLane);
+        lanes.forEach(lane => {
+          const s = stepAt(lane.steps, step.index);
+          lane.sketch.applyStep(s);
+          const laneEl = document.getElementById(lane.id);
+          if (s.type === 'done') laneEl.classList.add('lane-done');
+          else laneEl.classList.remove('lane-done');
+        });
       },
       resetBars: function (array) {
-        bubbleSketch.resetBars(array);
-        selectionSketch.resetBars(array);
-        insertionSketch.resetBars(array);
+        lanes.forEach(l => l.sketch.resetBars(array));
       },
-      setLerpSpeed: function (value) {
-        bubbleSketch.setLerpSpeed(value);
-        selectionSketch.setLerpSpeed(value);
-        insertionSketch.setLerpSpeed(value);
+      setLerpSpeed: function (val) {
+        lanes.forEach(l => l.sketch.setLerpSpeed(val));
       },
+      setSpeed: function (ms) {
+        lanes.forEach(l => l.sketch.setSpeed(ms));
+      }
     };
 
-    rebuildStepSets(sharedArray);
+    // Initial lanes
+    createLane('bubble');
+    createLane('selection');
+    createLane('insertion');
 
     const controls = initControls({
       sketch: sketchGroup,
       initialArray: sharedArray,
-      getSteps: function () {
-        return masterSteps;
-      },
-      setSteps: function (nextSteps) {
-        masterSteps = nextSteps;
-      },
-      buildSteps: function (array) {
-        return rebuildStepSets(array);
-      },
-      onStepChange: function (step, idx, total) {
-        const bubbleStep = stepAt(bubbleSteps, idx);
-        const selectionStep = stepAt(selectionSteps, idx);
-        const insertionStep = stepAt(insertionSteps, idx);
-
+      getSteps: () => masterSteps,
+      setSteps: (s) => { masterSteps = s; },
+      buildSteps: (array) => rebuildStepSets(array),
+      onStepChange: (step, idx, total) => {
         document.getElementById('globalStep').textContent = (idx + 1) + ' / ' + total;
         document.getElementById('sharedArrayView').textContent = '[' + sharedArray.join(', ') + ']';
+        
+        const allLengths = lanes.map(l => l.steps.length);
+        
+        rankSummary.innerHTML = '';
 
-        function bump(id, val) {
-          const el = document.getElementById(id);
-          if (!el) return;
-          const s = String(val);
-          if (el.textContent !== s) { el.textContent = s; SortLabShell.bumpStat(el); }
-        }
+        lanes.forEach(lane => {
+          const s = stepAt(lane.steps, idx);
+          const i = lane.id;
+          
+          document.getElementById(i + '-narration').textContent = s.action;
+          document.getElementById(i + '-step').textContent = (Math.min(idx, lane.steps.length - 1) + 1) + ' / ' + lane.steps.length;
+          
+          const compEl = document.getElementById(i + '-comp');
+          if (compEl.textContent !== String(s.comparisons)) {
+             compEl.textContent = s.comparisons; SortLabShell.bumpStat(compEl);
+          }
+          
+          const opVal = typeof s.swaps !== 'undefined' ? s.swaps : (typeof s.shifts !== 'undefined' ? s.shifts : 0);
+          const opEl = document.getElementById(i + '-op');
+          if (opEl.textContent !== String(opVal)) {
+             opEl.textContent = opVal; SortLabShell.bumpStat(opEl);
+          }
+          
+          document.getElementById(i + '-done').textContent = idx >= lane.steps.length - 1 ? 'Done' : 'Running';
 
-        document.getElementById('bubbleNarration').textContent = bubbleStep.action;
-        document.getElementById('bubbleStep').textContent = (Math.min(idx, bubbleSteps.length - 1) + 1) + ' / ' + bubbleSteps.length;
-        bump('bubbleComp', bubbleStep.comparisons);
-        bump('bubbleSwap', bubbleStep.swaps);
-        document.getElementById('bubbleDone').textContent = finishLabel(idx, bubbleSteps.length);
-        document.getElementById('bubbleFinish').textContent =
-          'Rank ' + finishRank(bubbleSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +
-          ' at step ' + bubbleSteps.length;
-
-        document.getElementById('selectionNarration').textContent = selectionStep.action;
-        document.getElementById('selectionStep').textContent = (Math.min(idx, selectionSteps.length - 1) + 1) + ' / ' + selectionSteps.length;
-        bump('selectionComp', selectionStep.comparisons);
-        bump('selectionSwap', selectionStep.swaps);
-        document.getElementById('selectionDone').textContent = finishLabel(idx, selectionSteps.length);
-        document.getElementById('selectionFinish').textContent =
-          'Rank ' + finishRank(selectionSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +
-          ' at step ' + selectionSteps.length;
-
-        document.getElementById('insertionNarration').textContent = insertionStep.action;
-        document.getElementById('insertionStep').textContent = (Math.min(idx, insertionSteps.length - 1) + 1) + ' / ' + insertionSteps.length;
-        bump('insertionComp', insertionStep.comparisons);
-        bump('insertionShift', insertionStep.shifts);
-        document.getElementById('insertionDone').textContent = finishLabel(idx, insertionSteps.length);
-        document.getElementById('insertionFinish').textContent =
-          'Rank ' + finishRank(insertionSteps.length, [bubbleSteps.length, selectionSteps.length, insertionSteps.length]) +
-          ' at step ' + insertionSteps.length;
+          // Rank Card
+          const rank = finishRank(lane.steps.length, allLengths);
+          const rankCard = document.createElement('div');
+          rankCard.className = 'summary-card';
+          rankCard.innerHTML = `
+            <span class="summary-label">${lane.algoName}</span>
+            <b>Rank ${rank}</b> at step ${lane.steps.length}
+          `;
+          rankSummary.appendChild(rankCard);
+        });
       },
       speedEl: document.getElementById('speed'),
       playBtn: document.getElementById('playBtn'),
@@ -308,13 +298,19 @@
       speedValueEl: document.getElementById('speedValue'),
     });
 
+    const addLaneBtn = document.getElementById('addLaneBtn');
+    if (addLaneBtn) {
+      addLaneBtn.addEventListener('click', () => {
+        createLane('bubble');
+        controls.reset();
+      });
+    }
+
     SortLabShell.registerPageRuntime({
       controls: controls,
-      onTileContentMounted: function (content) {
-        if (content === 'compare') {
-          SortLabShell.dispatchResize(0);
-        }
-      },
+      onTileContentMounted: (content) => {
+        if (content === 'compare') SortLabShell.dispatchResize(0);
+      }
     });
   </script>
 </body>

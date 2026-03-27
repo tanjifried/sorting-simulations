@@ -87,6 +87,7 @@
     var timer = null;
     var isPlaying = false;
     var queuedManualAdvance = 0;
+    var animationWaitStart = null;
 
     function getSketch() {
       if (typeof options.getSketch === 'function') {
@@ -97,6 +98,17 @@
 
     function isAnimating() {
       return !!window.sortLabAnimating;
+    }
+
+    function resetAnimationWait() {
+      animationWaitStart = null;
+    }
+
+    function forceStopAnimations() {
+      window.sortLabAnimationCount = 0;
+      window.sortLabAnimating = false;
+      window.dispatchEvent(new Event('sortlab:animationend'));
+      resetAnimationWait();
     }
 
     function clearTimer() {
@@ -127,6 +139,9 @@
       if (sketch && typeof sketch.setLerpSpeed === 'function') {
         sketch.setLerpSpeed(intervalToLerp(interval));
       }
+      if (sketch && typeof sketch.setSpeed === 'function') {
+        sketch.setSpeed(interval);
+      }
     }
 
     function applySpeedChange() {
@@ -141,8 +156,9 @@
 
     function stopPlayback() {
       isPlaying = false;
-      queuedAutoAdvance = 0;
+      queuedManualAdvance = 0;
       clearTimer();
+      resetAnimationWait();
     }
 
     function syncButtons() {
@@ -209,10 +225,24 @@
     function waitForAnimationThenAdvance() {
       if (!isPlaying) return;
       if (!isAnimating()) {
+        resetAnimationWait();
         stepIndex += 1;
         applyCurrentStep(false);
         scheduleNext();
         return;
+      }
+      if (!animationWaitStart) {
+        animationWaitStart = window.performance ? window.performance.now() : Date.now();
+      } else {
+        var now = window.performance ? window.performance.now() : Date.now();
+        var maxWait = Math.max(1500, getInterval() * 6);
+        if (now - animationWaitStart > maxWait) {
+          forceStopAnimations();
+          stepIndex += 1;
+          applyCurrentStep(false);
+          scheduleNext();
+          return;
+        }
       }
       window.requestAnimationFrame(function () {
         waitForAnimationThenAdvance();
@@ -288,6 +318,7 @@
       }
       stopPlayback();
       queuedManualAdvance = 0;
+      resetAnimationWait();
       currentArray = generateArray(sizeEl.value, patternEl.value);
       setSteps(buildSteps(currentArray));
       stepIndex = 0;
@@ -319,6 +350,7 @@
     resetBtn.addEventListener('click', function () {
       stopPlayback();
       queuedManualAdvance = 0;
+      resetAnimationWait();
       stepIndex = 0;
       applyCurrentStep(true);
     });
@@ -375,6 +407,7 @@
       reset: function () {
         stopPlayback();
         queuedManualAdvance = 0;
+        resetAnimationWait();
         stepIndex = 0;
         applyCurrentStep(true);
       },

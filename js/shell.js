@@ -720,7 +720,7 @@
 
     var brandVersion = document.createElement('span');
     brandVersion.className = 'topnav-version';
-    brandVersion.textContent = 'v1.4.1';
+    brandVersion.textContent = 'v1.6.6';
 
     brand.appendChild(brandName);
     brand.appendChild(brandVersion);
@@ -806,7 +806,7 @@
       rows: 1,
       colSizes: ['1fr'],
       rowSizes: ['1fr'],
-      tiles: [{ id: 't0', col: 1, row: 1, content: defaultContent, height: null, hideHeader: false }],
+      tiles: [{ id: 't0', col: 1, row: 1, content: defaultContent, height: null, topOffset: 0, hideHeader: false }],
       nextId: 1,
     };
   }
@@ -835,18 +835,20 @@
       var idNum = Number(String(tile.id || '').replace(/[^0-9]/g, ''));
       nextId = Math.max(nextId, isNaN(idNum) ? 0 : idNum + 1);
       var rawHeight = Number(tile.height);
+      var rawTopOffset = Number(tile.topOffset);
       normalized.tiles.push({
         id: tile.id || ('t' + nextId),
         col: Math.max(1, Math.min(normalized.cols, Number(tile.col) || 1)),
         row: Math.max(1, Math.min(normalized.rows, Number(tile.row) || 1)),
         content: allowed.indexOf(tile.content) !== -1 ? tile.content : 'empty',
         height: isNaN(rawHeight) || rawHeight < 160 ? null : Math.round(rawHeight),
+        topOffset: isNaN(rawTopOffset) ? 0 : Math.round(rawTopOffset),
         hideHeader: !!tile.hideHeader,
       });
     });
 
     if (!normalized.tiles.length) {
-      normalized.tiles.push({ id: 't0', col: 1, row: 1, content: availableContents.visualizer ? 'visualizer' : 'empty', height: null });
+      normalized.tiles.push({ id: 't0', col: 1, row: 1, content: availableContents.visualizer ? 'visualizer' : 'empty', height: null, topOffset: 0, hideHeader: false });
     }
 
     if (!normalized.tiles.some(function (tile) { return tile.content !== 'empty'; })) {
@@ -875,7 +877,7 @@
     var narration = document.getElementById('narration');
     var stats = document.getElementById('statsRow');
     var legend = document.querySelector('.how-section');
-    var compareStack = document.querySelector('.compare-stack');
+    var comparePanel = document.getElementById('comparePanel');
     var sketchContainer = document.getElementById('sketchContainer');
     var storageFile = currentFile();
 
@@ -928,9 +930,9 @@
       availableContents.legend = { label: 'Legend', node: legend };
       stash.appendChild(legend);
     }
-    if (compareStack) {
-      availableContents.compare = { label: 'Compare View', node: compareStack };
-      stash.appendChild(compareStack);
+    if (comparePanel) {
+      availableContents.compare = { label: 'Compare View', node: comparePanel };
+      stash.appendChild(comparePanel);
     }
 
     function loadLayout() {
@@ -1218,7 +1220,7 @@
         return;
       }
 
-      workspace.layout.tiles.push({ id: nextTileId(), col: target.col, row: target.row, content: 'empty', height: null, hideHeader: false });
+      workspace.layout.tiles.push({ id: nextTileId(), col: target.col, row: target.row, content: 'empty', height: null, topOffset: 0, hideHeader: false });
       saveLayout();
       renderWorkspace();
     }
@@ -1373,33 +1375,39 @@
       });
     }
 
-    // Drag the top edge of a tile — grows tile upward, shrinks when dragged down.
-    // Works by adjusting tile.height independently, mirroring installTileHeightDrag
-    // but with inverted delta direction.
+    // Drag the top edge of a tile while keeping the bottom edge anchored.
     function installTileTopDrag(handle, tileId) {
       handle.addEventListener('pointerdown', function (event) {
-        if (event.button !== 0) return;
+        if (event.button !== 0) {
+          return;
+        }
         event.preventDefault();
         event.stopPropagation();
 
         var tile = findTile(tileId);
         var tileEl = workspace.root.querySelector('[data-tile-id="' + tileId + '"]');
-        if (!tile || !tileEl) return;
+        if (!tile || !tileEl) {
+          return;
+        }
 
         handle.setPointerCapture(event.pointerId);
         var startHeight = tileEl.getBoundingClientRect().height;
+        var startOffset = Number(tile.topOffset) || 0;
         var pointerStart = event.clientY;
+        var bottomAnchor = startOffset + startHeight;
         var nextHeight = startHeight;
+        var nextOffset = startOffset;
         var maxHeight = Math.max(320, window.innerHeight - 140);
 
         document.body.style.cursor = 'row-resize';
         document.body.style.userSelect = 'none';
 
         function onMove(moveEvent) {
-          // Dragging up (negative delta) increases height; dragging down shrinks it
-          var delta = pointerStart - moveEvent.clientY;
-          nextHeight = clamp(startHeight + delta, 160, maxHeight);
+          var delta = moveEvent.clientY - pointerStart;
+          nextHeight = clamp(startHeight - delta, 160, maxHeight);
+          nextOffset = bottomAnchor - nextHeight;
           tileEl.style.height = Math.round(nextHeight) + 'px';
+          tileEl.style.marginTop = Math.round(nextOffset) + 'px';
           dispatchSyntheticResize(0);
         }
 
@@ -1410,6 +1418,7 @@
           handle.removeEventListener('pointerup', onUp);
           handle.removeEventListener('pointercancel', onUp);
           tile.height = Math.round(nextHeight);
+          tile.topOffset = Math.round(nextOffset);
           saveLayout();
           renderWorkspace();
         }
@@ -1461,6 +1470,9 @@
         tileEl.style.gridRow = String(tile.row);
         if (tile.height && tile.height >= 160) {
           tileEl.style.height = Math.round(tile.height) + 'px';
+        }
+        if (tile.topOffset) {
+          tileEl.style.marginTop = Math.round(tile.topOffset) + 'px';
         }
         if (tile.hideHeader) {
           tileEl.classList.add('tile-header-hidden');
@@ -1570,7 +1582,7 @@
           }(tile.col - 1));
           tileEl.appendChild(rHandle);
         }
-        // Top edge: resize this tile's own height from the top (inverse drag)
+        // Top edge: resize tile from the top while anchoring its bottom edge.
         if (tile.row > 1) {
           var tHandle = document.createElement('div');
           tHandle.className = 'tile-edge-handle tile-edge-top';
@@ -1589,6 +1601,25 @@
             installTileHeightDrag(bHandle, id);
           }(tile.id));
           tileEl.appendChild(bHandle);
+        }
+
+        if (tile.hideHeader) {
+          var restoreHdrBtn = document.createElement('button');
+          restoreHdrBtn.type = 'button';
+          restoreHdrBtn.className = 'tile-header-restore';
+          restoreHdrBtn.title = 'Show title bar';
+          restoreHdrBtn.setAttribute('aria-label', 'Show title bar');
+          restoreHdrBtn.textContent = 'Show title';
+          (function (t) {
+            restoreHdrBtn.addEventListener('click', function (event) {
+              event.preventDefault();
+              event.stopPropagation();
+              t.hideHeader = false;
+              saveLayout();
+              renderWorkspace();
+            });
+          }(tile));
+          tileEl.appendChild(restoreHdrBtn);
         }
 
         workspace.root.appendChild(tileEl);
@@ -1714,7 +1745,7 @@
             workspace.layout.rowSizes.push('1fr');
             var newId = 't' + workspace.layout.nextId;
             workspace.layout.nextId += 1;
-            workspace.layout.tiles.push({ id: newId, col: 1, row: newRow, content: contentKey, height: null, hideHeader: false });
+            workspace.layout.tiles.push({ id: newId, col: 1, row: newRow, content: contentKey, height: null, topOffset: 0, hideHeader: false });
             workspace.saveLayout();
             workspace.render();
           }
