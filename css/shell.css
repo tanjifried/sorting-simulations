@@ -946,11 +946,65 @@ body.is-fullscreen .tile-workspace {
 
 .compare-stack {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+  gap: 1.25rem;
+  align-items: start;
 }
 
 .compare-lane {
+  position: relative;
   display: grid;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.lane-remove-btn {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: all 140ms ease;
+}
+
+.lane-remove-btn:hover {
+  border-color: #f43f5e;
+  color: #f43f5e;
+  background: color-mix(in srgb, #f43f5e 12%, var(--surface-2));
+}
+
+.add-lane-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 1.5rem;
+  border: 2px dashed var(--border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 160ms ease;
+}
+
+.add-lane-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .compare-lane {
@@ -1721,11 +1775,46 @@ body.is-fullscreen .float-panel {
   background: transparent;
   border-radius: 22px 22px 0 0;
   transition: background 160ms ease;
-  cursor: pointer;
+  pointer-events: none;
 }
 
 .tile-card.tile-header-hidden:hover::before {
   background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.tile-header-restore {
+  position: absolute;
+  top: 6px;
+  right: 0.7rem;
+  z-index: 11;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-2) 86%, var(--surface));
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 0.24rem 0.5rem;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 140ms ease, transform 140ms ease, border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.tile-card.tile-header-hidden:hover .tile-header-restore {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.tile-header-restore:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-2));
 }
 
 /* ── hide-header-btn (eye icon in tile actions) ── */
@@ -1808,4 +1897,3 @@ body.tiles-snap-gap .tile-card.tile-header-hidden .tile-body {
   box-sizing: border-box;
   overflow-y: auto;
 }
-

@@ -50,6 +50,7 @@
       var bars = [];
       var maxVal = 100;
       var lerpSpeed = 0.12;
+      var swapFrames = 18;
       var paddingTop = 20;
       var paddingBottom = 40;
       var paddingSides = 16;
@@ -106,6 +107,14 @@
         var left = step.swap[0];
         var right = step.swap[1];
         if (!bars[left] || !bars[right]) { syncBarsFromArray(step.array); return false; }
+        
+        // If frames is 0, skip animation entirely
+        if (swapFrames < 1) {
+          syncBarsFromArray(step.array);
+          syncStates(step);
+          return false;
+        }
+
         currentStep = step;
         maxVal = Math.max(1, Math.max.apply(null, step.array));
         syncStates(step);
@@ -158,7 +167,7 @@
           var brightness = 1.0;
 
           if (animating && swapState && (i === swapState.left || i === swapState.right)) {
-            var t = animFrame / SWAP_FRAMES;
+            var t = animFrame / swapFrames;
             var arc = Math.sin(t * Math.PI);
             var ease = t * t * (3 - 2 * t);
             var targetIdx = i === swapState.left ? swapState.right : swapState.left;
@@ -198,7 +207,7 @@
 
         if (animating) {
           animFrame++;
-          if (animFrame >= SWAP_FRAMES && swapState) {
+          if (animFrame >= swapFrames && swapState) {
             var tmp = bars[swapState.left];
             bars[swapState.left] = bars[swapState.right];
             bars[swapState.right] = tmp;
@@ -233,6 +242,19 @@
       };
 
       p.setLerpSpeed = function (value) { lerpSpeed = value; };
+
+      p.setSpeed = function (ms) {
+        // Map 10ms-1000ms delay to 0-36 frames of animation
+        // Below 50ms delay, we disable animation for raw speed.
+        if (ms < 50) {
+          swapFrames = 0;
+        } else {
+          // Standard: 60fps means 1000ms is 60 frames. 
+          // We target animation to take about 60% of the delay.
+          swapFrames = Math.floor((ms / 1000) * 60 * 0.6);
+          swapFrames = clamp(swapFrames, 1, 40);
+        }
+      };
 
       p.destroy = function () { stopAnimations(); p.remove(); };
     };

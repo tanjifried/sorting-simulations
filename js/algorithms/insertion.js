@@ -19,7 +19,7 @@
     let comparisons = 0, shifts = 0;
 
     result.push(makeStep('init', { array:[...a], pass:0, sortedLen: n > 0 ? 1 : 0,
-      comparisons, shifts, key:null, keyIdx:null,
+      comparisons, shifts, key:null, keyIdx:null, holeIdx: null,
       action:'Ready: the first element is considered sorted by default.' }, INSERTION_STEP_LINES));
 
     for (let i = 1; i < n; i++) {
@@ -28,22 +28,23 @@
       let passShifts = 0;
 
       result.push(makeStep('pick_key', { array:[...a], pass:i, sortedLen:i,
-        comparisons, shifts, key, keyIdx:i,
+        comparisons, shifts, key, keyIdx:i, holeIdx: i,
         action:`Picked key ${key} at index ${i}. Now compare leftward to insert it correctly.` }, INSERTION_STEP_LINES));
 
       while (j >= 0) {
         comparisons++;
         result.push(makeStep('compare', { array:[...a], pass:i, sortedLen:i,
-          comparisons, shifts, key, keyIdx:i, comparing:j,
+          comparisons, shifts, key, keyIdx:i, comparing:j, holeIdx: j + 1,
           action:`Comparing key ${key} with ${a[j]} at index ${j}.` }, INSERTION_STEP_LINES));
 
         if (a[j] > key) {
+          const oldHole = j + 1;
           a[j + 1] = a[j];
           shifts++;
           passShifts++;
           result.push(makeStep('shift', { array:[...a], pass:i, sortedLen:i,
-            comparisons, shifts, key, keyIdx:j, shiftedIdx:j+1,
-            action:`${a[j+1]} shifts right to make room for key ${key}.` }, INSERTION_STEP_LINES));
+            comparisons, shifts, key, keyIdx:j, shiftedIdx:j, targetIdx: oldHole, holeIdx: j,
+            action:`${a[j]} shifts right to make room for key ${key}.` }, INSERTION_STEP_LINES));
           j--;
         } else {
           break;
@@ -52,12 +53,12 @@
 
       if (passShifts === 0) {
         result.push(makeStep('in_place', { array:[...a], pass:i, sortedLen:i+1,
-          comparisons, shifts, key, keyIdx:i,
+          comparisons, shifts, key, keyIdx:i, holeIdx: i,
           action:`Key ${key} was already in the correct position.` }, INSERTION_STEP_LINES));
       } else {
         a[j + 1] = key;
         result.push(makeStep('insert', { array:[...a], pass:i, sortedLen:i+1,
-          comparisons, shifts, key, keyIdx:j+1, insertIdx:j+1,
+          comparisons, shifts, key, keyIdx:j+1, insertIdx:j+1, holeIdx: j + 1,
           action:`Inserted key ${key} at index ${j+1}. Sorted side grows by one.` }, INSERTION_STEP_LINES));
       }
     }

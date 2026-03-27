@@ -1,5 +1,5 @@
 (function () {
-  var SHIFT_FRAMES = 18;
+  var ANIM_FRAMES = 24;
 
   var colorCache = {};
   var lastTheme = null;
@@ -47,26 +47,20 @@
     return 'default';
   }
 
-  function getShiftAnimation(step) {
-    if (step.type !== 'shift') return null;
-    if (typeof step.shiftedIdx !== 'number' || typeof step.keyIdx !== 'number') return null;
-    return { shiftedIdx: step.shiftedIdx, keyIdx: step.keyIdx };
-  }
-
   function mountSketch(containerRef) {
     var sketch = function (p) {
       var bars = [];
       var maxVal = 100;
-      var lerpSpeed = 0.12;
-      var paddingTop = 20;
+      var lerpSpeed = 0.15;
+      var animFrames = 24;
+      var paddingTop = 60; // Extra room for floating key
       var paddingBottom = 40;
-      var paddingSides = 16;
-      var barGap = 4;
+      var paddingSides = 20;
+      var barGap = 6;
       var canvasHeight = 340;
       var currentStep = null;
       var animating = false;
       var animFrame = 0;
-      var shiftState = null;
       var registeredAnimation = false;
 
       function updateGlobalAnimation(active) {
@@ -105,22 +99,7 @@
       function stopAnimations() {
         animating = false;
         animFrame = 0;
-        shiftState = null;
         updateGlobalAnimation(false);
-      }
-
-      function startShift(step) {
-        var anim = getShiftAnimation(step);
-        if (!anim) return false;
-        if (!bars[anim.shiftedIdx] || !bars[anim.keyIdx]) { syncBarsFromArray(step.array); return false; }
-        currentStep = step;
-        maxVal = Math.max(1, Math.max.apply(null, step.array));
-        syncStates(step);
-        shiftState = { shiftedIdx: anim.shiftedIdx, keyIdx: anim.keyIdx };
-        animating = true;
-        animFrame = 0;
-        updateGlobalAnimation(true);
-        return true;
       }
 
       p.setup = function () {
@@ -139,75 +118,85 @@
 
         var usableW = p.width - paddingSides * 2;
         var barW = (usableW - barGap * (bars.length - 1)) / bars.length;
+        var t = animating ? clamp(animFrame / (animFrames - 1), 0, 1) : 1;
+        var ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-        // key bar on top during shift
-        var drawOrder = [];
-        for (var k = 0; k < bars.length; k++) drawOrder.push(k);
-        if (animating && shiftState) {
-          drawOrder = [];
-          for (var k = 0; k < bars.length; k++) {
-            if (k !== shiftState.keyIdx) drawOrder.push(k);
-          }
-          drawOrder.push(shiftState.keyIdx);
-        }
-
-        for (var j = 0; j < drawOrder.length; j++) {
-          var i = drawOrder[j];
+        for (var i = 0; i < bars.length; i++) {
           var targetH = (bars[i].value / maxVal) * (p.height - paddingTop - paddingBottom);
-          var diff = targetH - bars[i].displayH;
-          bars[i].displayH = Math.abs(diff) < 0.4 ? targetH : bars[i].displayH + diff * lerpSpeed;
+          bars[i].displayH = p.lerp(bars[i].displayH, targetH, lerpSpeed);
 
           var x = paddingSides + i * (barW + barGap);
           var y = p.height - paddingBottom - bars[i].displayH;
           var alpha = 255;
-          var scale = 1.0;
-          var brightness = 1.0;
+          var isHole = currentStep && currentStep.holeIdx === i && currentStep.type !== 'insert' && currentStep.type !== 'init' && currentStep.type !== 'done';
+          
+          if (isHole) {
+             alpha = 40; // Render hole as ghost
+          }
 
-          if (animating && shiftState) {
-            var t = animFrame / SHIFT_FRAMES;
-            var arc = Math.sin(t * Math.PI);
-            var ease = t * t * (3 - 2 * t);
-
-            if (i === shiftState.shiftedIdx) {
-              // slide right one slot
-              var targetX = paddingSides + (i + 1) * (barW + barGap);
-              x = x + (targetX - x) * ease;
-              brightness = 1 - arc * 0.2;
-              alpha = 255 * (1 - arc * 0.25);
-            } else if (i === shiftState.keyIdx) {
-              scale = 1 + arc * 0.10;
-              y -= arc * 14;
-              brightness = 1 + arc * 0.14;
-            }
+          // Special animation for shifting
+          if (animating && currentStep.type === 'shift' && i === currentStep.targetIdx) {
+              var startX = paddingSides + currentStep.shiftedIdx * (barW + barGap);
+              x = p.lerp(startX, x, ease);
+              alpha = 255;
           }
 
           p.noStroke();
-          var baseColor = p.color(stateColor(bars[i].state));
-          p.fill(
-            clamp(baseColor.levels[0] * brightness, 0, 255),
-            clamp(baseColor.levels[1] * brightness, 0, 255),
-            clamp(baseColor.levels[2] * brightness, 0, 255),
-            alpha
-          );
-          var fw = barW * scale;
-          var fh = bars[i].displayH * scale;
-          p.rect(x + (barW - fw) / 2, y + (bars[i].displayH - fh), fw, fh, 4, 4, 0, 0);
+          p.fill(p.color(stateColor(bars[i].state + (isHole ? '' : ''))).levels[0], 
+                 p.color(stateColor(bars[i].state)).levels[1], 
+                 p.color(stateColor(bars[i].state)).levels[2], 
+                 alpha);
+          
+          p.rect(x, y, barW, bars[i].displayH, 4, 4, 0, 0);
 
-          p.fill(textColor[0], textColor[1], textColor[2], alpha);
-          p.textSize(10);
-          p.textAlign(p.CENTER, p.TOP);
-          p.text(bars[i].label, x + barW / 2, p.height - paddingBottom + 10);
+          if (!isHole) {
+            p.fill(textColor[0], textColor[1], textColor[2], alpha);
+            p.textSize(10);
+            p.textAlign(p.CENTER, p.TOP);
+            p.text(bars[i].label, x + barW / 2, p.height - paddingBottom + 10);
+          }
+        }
+
+        // Draw floating key
+        if (currentStep && currentStep.key !== null && typeof currentStep.key !== 'undefined') {
+            var keyVal = currentStep.key;
+            var keyH = (keyVal / maxVal) * (p.height - paddingTop - paddingBottom);
+            var keyColor = p.color(getCSSVarCached('--bar-key'));
+            
+            var targetHoleIdx = (typeof currentStep.holeIdx === 'number') ? currentStep.holeIdx : currentStep.keyIdx;
+            var keyX = paddingSides + targetHoleIdx * (barW + barGap);
+            var keyY = p.height - paddingBottom - keyH - 40; // Default lift height
+
+            if (animating) {
+                if (currentStep.type === 'pick_key') {
+                    keyY = p.lerp(p.height - paddingBottom - keyH, keyY, ease);
+                } else if (currentStep.type === 'insert' || currentStep.type === 'in_place') {
+                    keyY = p.lerp(keyY, p.height - paddingBottom - keyH, ease);
+                } else if (currentStep.type === 'shift') {
+                    var prevHoleIdx = currentStep.targetIdx;
+                    var prevX = paddingSides + prevHoleIdx * (barW + barGap);
+                    keyX = p.lerp(prevX, keyX, ease);
+                }
+            }
+
+            // Glow effect for key
+            p.noStroke();
+            p.fill(keyColor.levels[0], keyColor.levels[1], keyColor.levels[2], 100);
+            p.rect(keyX - 2, keyY - 2, barW + 4, keyH + 4, 6, 6, 0, 0);
+            
+            p.fill(keyColor.levels[0], keyColor.levels[1], keyColor.levels[2], 255);
+            p.rect(keyX, keyY, barW, keyH, 4, 4, 0, 0);
+            
+            p.fill(textColor[0], textColor[1], textColor[2]);
+            p.text(String(keyVal), keyX + barW / 2, keyY - 15);
         }
 
         if (animating) {
           animFrame++;
-          if (animFrame >= SHIFT_FRAMES && shiftState) {
-            animating = false;
-            animFrame = 0;
-            shiftState = null;
+          if (animFrame >= animFrames) {
+            stopAnimations();
             syncBarsFromArray(currentStep.array);
             syncStates(currentStep);
-            updateGlobalAnimation(false);
           }
         }
       };
@@ -221,18 +210,34 @@
         stopAnimations();
         currentStep = step;
         maxVal = Math.max(1, Math.max.apply(null, step.array));
-        if (startShift(step)) return;
         syncBarsFromArray(step.array);
         syncStates(step);
+        
+        // Only animate if we have frames to spare
+        if (animFrames > 0 && ['pick_key', 'shift', 'insert', 'in_place'].indexOf(step.type) !== -1) {
+            animating = true;
+            animFrame = 0;
+            updateGlobalAnimation(true);
+        }
       };
 
       p.resetBars = function (array) {
         stopAnimations();
+        currentStep = null;
         maxVal = Math.max(1, Math.max.apply(null, array));
         bars = array.map(function (v) { return makeBar(v); });
       };
 
       p.setLerpSpeed = function (value) { lerpSpeed = value; };
+
+      p.setSpeed = function (ms) {
+        if (ms < 50) {
+          animFrames = 0;
+        } else {
+          animFrames = Math.floor((ms / 1000) * 60 * 0.7); // 70% of delay
+          animFrames = clamp(animFrames, 1, 40);
+        }
+      };
 
       p.destroy = function () { stopAnimations(); p.remove(); };
     };
