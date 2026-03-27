@@ -19,6 +19,19 @@ We use Git to manage updates. If you have Git installed, you can receive the lat
 - **Download Git**: [https://git-scm.com/downloads](https://git-scm.com/downloads)
 - **Why?**: It allows you to use the `update.bat` or `update.sh` scripts included in this folder.
 
+Install Git by OS:
+
+```bash
+# Windows (PowerShell)
+winget install --id Git.Git -e
+
+# macOS (Homebrew)
+brew install git
+
+# Linux (Debian/Ubuntu)
+sudo apt update && sudo apt install -y git
+```
+
 ### 2. Local p5.js Runtime
 The app expects p5.js at `lib/p5.min.js`. If you downloaded this via a `.zip` file, make sure the `lib` folder is present.
 - If missing, download p5.js v1.9.4 from: [https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js](https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js) and save it as `lib/p5.min.js`.

@@ -1,4 +1,4 @@
 {
-  "version": "1.6.7",
-  "notes": "Include updater script on pages and refine compare/insertion animations."
+  "version": "1.6.8",
+  "notes": "Add OS-specific Git install commands to the README requirements."
 }
