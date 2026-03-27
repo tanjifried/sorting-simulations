@@ -44,6 +44,60 @@ Project repository: https://github.com/tanjifried/sorting-simulations.git
 2. **Explore Algorithms**: Launch Bubble, Selection, or Insertion sort from the home page.
 3. **Run a Race**: Open `compare.html` to see algorithms compete on the same data.
 
+## Installation (Recommended)
+
+Clone with Git:
+
+```bash
+# Windows (PowerShell)
+git clone https://github.com/tanjifried/sorting-simulations.git
+cd sorting-simulations
+
+# macOS/Linux (Terminal)
+git clone https://github.com/tanjifried/sorting-simulations.git
+cd sorting-simulations
+```
+
+Open the app:
+
+```bash
+# Any OS
+# Open index.html in your browser (double-click in file explorer works too)
+```
+
+Optional: Verify p5.js file exists:
+
+```bash
+# Any OS
+# Ensure lib/p5.min.js exists
+```
+
+## Update Process
+
+Update with the provided scripts:
+
+```bash
+# Windows
+update.bat
+
+# macOS/Linux
+./update.sh
+```
+
+Manual update with Git:
+
+```bash
+git status
+git pull origin main
+```
+
+If you downloaded the ZIP instead of using Git:
+
+```bash
+# Replace your folder with the latest ZIP from GitHub,
+# then confirm lib/p5.min.js exists.
+```
+
 ## Keeping Up to Date
 
 If you cloned this repository via Git (https://github.com/tanjifried/sorting-simulations.git), simply run the update script for your OS:

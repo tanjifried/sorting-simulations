@@ -1,4 +1,4 @@
 {
-  "version": "1.6.8",
-  "notes": "Add OS-specific Git install commands to the README requirements."
+  "version": "1.6.9",
+  "notes": "Add comprehensive installation and update commands to README."
 }
