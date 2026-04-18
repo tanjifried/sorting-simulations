@@ -720,7 +720,7 @@
 
     var brandVersion = document.createElement('span');
     brandVersion.className = 'topnav-version';
-    brandVersion.textContent = 'v1.6.9';
+    brandVersion.textContent = 'v1.7.0';
 
     brand.appendChild(brandName);
     brand.appendChild(brandVersion);
@@ -1289,10 +1289,12 @@
         var pixels = trackType === 'col'
           ? parseTrackPixels(computed.gridTemplateColumns)
           : parseTrackPixels(computed.gridTemplateRows);
-        var firstStart = pixels[index];
-        var secondStart = pixels[index + 1];
-        var total = firstStart + secondStart;
+        var isSingleTrack = pixels.length === 1;
+        var firstStart = isSingleTrack ? pixels[0] : pixels[index];
+        var secondStart = isSingleTrack ? null : pixels[index + 1];
+        var total = isSingleTrack ? firstStart : firstStart + secondStart;
         var pointerStart = trackType === 'col' ? e.clientX : e.clientY;
+        var originalWidth = isSingleTrack ? ws.root.style.width : '';
 
         document.body.style.cursor = trackType === 'col' ? 'col-resize' : 'row-resize';
         document.body.style.userSelect = 'none';
@@ -1300,15 +1302,20 @@
         function onMove(me) {
           var delta = (trackType === 'col' ? me.clientX : me.clientY) - pointerStart;
           var minSize = trackType === 'col' ? 200 : 160;
-          var first = clamp(firstStart + delta, minSize, total - minSize);
-          var second = total - first;
-          var sizes = trackType === 'col' ? ws.layout.colSizes : ws.layout.rowSizes;
-          sizes[index] = ((first / total) * 100).toFixed(3) + '%';
-          sizes[index + 1] = ((second / total) * 100).toFixed(3) + '%';
-          ws.root.style.setProperty(
-            trackType === 'col' ? '--tile-cols' : '--tile-rows',
-            buildTemplate(sizes, trackType === 'col' ? 200 : 160)
-          );
+
+          if (isSingleTrack) {
+            var newWidth = firstStart + delta;
+            newWidth = Math.max(minSize, newWidth);
+            var newFr = Math.max(1, newWidth / 200);
+            ws.root.style.setProperty('--tile-cols', newFr + 'fr');
+          } else {
+            var first = clamp(firstStart + delta, minSize, total - minSize);
+            var second = total - first;
+            var sizes = ws.layout.colSizes;
+            sizes[index] = ((first / total) * 100).toFixed(3) + '%';
+            sizes[index + 1] = ((second / total) * 100).toFixed(3) + '%';
+            ws.root.style.setProperty('--tile-cols', buildTemplate(sizes, minSize));
+          }
           syncResize(0);
         }
 
@@ -1318,6 +1325,9 @@
           handle.removeEventListener('pointermove', onMove);
           handle.removeEventListener('pointerup', onUp);
           handle.removeEventListener('pointercancel', onUp);
+          if (isSingleTrack) {
+            ws.root.style.setProperty('--tile-cols', buildTemplate(['1fr'], 200));
+          }
           save();
           rerender();
         }
@@ -1572,8 +1582,8 @@
         }
 
         // ── Edge resize handles ──
-        // Right edge: resize column — show if there's a tile to the right
-        if (tile.col < workspace.layout.cols) {
+        // Right edge: resize column — always show (even for last column when it's the only one)
+        if (workspace.layout.cols === 1 || tile.col < workspace.layout.cols) {
           var rHandle = document.createElement('div');
           rHandle.className = 'tile-edge-handle tile-edge-right';
           rHandle.setAttribute('aria-label', 'Resize column');

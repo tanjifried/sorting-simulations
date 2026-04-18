@@ -1,4 +1,4 @@
 {
-  "version": "1.6.9",
-  "notes": "Add comprehensive installation and update commands to README."
+  "version": "1.7.0",
+  "notes": "Fix panel horizontal resize when panel is at max width."
 }
