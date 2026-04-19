@@ -1,4 +1,26 @@
 (function () {
+  const params = new URLSearchParams(location.search);
+  if (params.get('from') === 'presentation') {
+    let returnSlide = 0;
+    try {
+      const stored = sessionStorage.getItem('returnSlide');
+      const parsed = parseInt(stored || '0', 10);
+      returnSlide = !isNaN(parsed) && parsed >= 0 ? parsed : 0;
+    } catch (error) {
+      returnSlide = 0;
+    }
+    const btn = document.createElement('a');
+    btn.href = 'presentation.html#slide-' + returnSlide;
+    btn.className = 'button-link ghost';
+    btn.textContent = '\u2190 Back to Presentation';
+    btn.style.cssText = 'position:fixed;top:12px;left:12px;z-index:200;font-size:0.85rem;';
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.prepend(btn);
+    });
+  }
+})();
+
+(function () {
   var PAGES = [
     { file: 'index.html', label: 'Home', step: -1 },
     { file: 'bubble.html', label: 'Bubble Sort', step: 0 },
@@ -1294,7 +1316,6 @@
         var secondStart = isSingleTrack ? null : pixels[index + 1];
         var total = isSingleTrack ? firstStart : firstStart + secondStart;
         var pointerStart = trackType === 'col' ? e.clientX : e.clientY;
-        var originalWidth = isSingleTrack ? ws.root.style.width : '';
 
         document.body.style.cursor = trackType === 'col' ? 'col-resize' : 'row-resize';
         document.body.style.userSelect = 'none';
@@ -1302,19 +1323,19 @@
         function onMove(me) {
           var delta = (trackType === 'col' ? me.clientX : me.clientY) - pointerStart;
           var minSize = trackType === 'col' ? 200 : 160;
+          var sizes = trackType === 'col' ? ws.layout.colSizes : ws.layout.rowSizes;
+          var trackProp = trackType === 'col' ? '--tile-cols' : '--tile-rows';
 
           if (isSingleTrack) {
-            var newWidth = firstStart + delta;
-            newWidth = Math.max(minSize, newWidth);
-            var newFr = Math.max(1, newWidth / 200);
-            ws.root.style.setProperty('--tile-cols', newFr + 'fr');
+            var newSize = Math.max(minSize, firstStart + delta);
+            sizes[0] = Math.round(newSize) + 'px';
+            ws.root.style.setProperty(trackProp, buildTemplate(sizes, minSize));
           } else {
             var first = clamp(firstStart + delta, minSize, total - minSize);
             var second = total - first;
-            var sizes = ws.layout.colSizes;
             sizes[index] = ((first / total) * 100).toFixed(3) + '%';
             sizes[index + 1] = ((second / total) * 100).toFixed(3) + '%';
-            ws.root.style.setProperty('--tile-cols', buildTemplate(sizes, minSize));
+            ws.root.style.setProperty(trackProp, buildTemplate(sizes, minSize));
           }
           syncResize(0);
         }
@@ -1325,9 +1346,6 @@
           handle.removeEventListener('pointermove', onMove);
           handle.removeEventListener('pointerup', onUp);
           handle.removeEventListener('pointercancel', onUp);
-          if (isSingleTrack) {
-            ws.root.style.setProperty('--tile-cols', buildTemplate(['1fr'], 200));
-          }
           save();
           rerender();
         }

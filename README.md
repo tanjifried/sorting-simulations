@@ -139,3 +139,15 @@ The included helper scripts still work if you prefer serving the files locally:
 - `run-local.bat`
 
 They are optional because the project is designed to work without a server.
+
+## Presentation
+
+Open `presentation.html` directly in a browser — no server needed:
+
+```
+file:///path/to/sorting-simulations/presentation.html
+```
+
+Navigate with the ← → arrow keys or on-screen Prev / Next buttons. Press `Escape` to return to the Sort Lab home page.
+
+Simulation handoff slides launch the corresponding algorithm page. Use the **← Back to Presentation** button that appears on each sim page to return to your place in the deck.
