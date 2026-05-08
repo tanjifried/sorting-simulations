@@ -6,12 +6,16 @@
   <title>Sort Lab Presentation</title>
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/shell.css">
-  <link rel="stylesheet" href="css/presentation.css">
+  <link rel="stylesheet" href="css/presentation.css?v=5">
 </head>
 <body data-theme="dark">
   <div class="progress-bar" id="progress-bar"></div>
   <main class="presentation" role="main">
-    <section class="slide" data-slide="1" aria-label="Slide 1">
+
+    <!-- ─── Slide 1: Title ─── -->
+    <section class="slide" data-slide=\"1\" aria-label="Slide 1">
+      <div class="slide-canvas" style="text-align: center;">
+
       <span class="eyebrow">Module III</span>
       <h1>Sorting Algorithms</h1>
       <p class="slide-subtitle">Fundamental Data Structures and Algorithms</p>
@@ -23,22 +27,46 @@
         <li>Analyze time and space complexity</li>
         <li>Implement sorting algorithms in code</li>
       </ol>
-    </section>
-    <section class="slide" data-slide="2" aria-label="Slide 2">
-      <div class="slide-split">
-        <div class="split-prose">
-          <h2>What is sorting?</h2>
-          <p>Sorting is the process of arranging data in a specific order.</p>
-          <blockquote>What is the correct position of each element relative to all the others?</blockquote>
-          <p><strong>Ascending:</strong> smallest → largest, A → Z</p>
-          <p><strong>Descending:</strong> largest → smallest, Z → A</p>
-        </div>
-        <div class="split-visual">
-          <div class="bar-demo" aria-label="Unsorted to sorted bar animation"></div>
-        </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 1 / 18</div>
+        </footer>
       </div>
     </section>
-    <section class="slide" data-slide="3" aria-label="Slide 3">
+
+    <!-- ─── Slide 2: What is Sorting? ─── -->
+    <section class="slide" data-slide=\"2\" aria-label="Slide 2">
+      <div class="slide-canvas align-top">
+        <h2>What is sorting?</h2>
+        <div class="slide-split">
+          <div class="split-prose">
+            <p>Sorting is the process of arranging data in a specific order.</p>
+            <blockquote>What is the correct position of each element relative to all the others?</blockquote>
+            <p><strong>Ascending:</strong> smallest &rarr; largest, A &rarr; Z</p>
+            <p><strong>Descending:</strong> largest &rarr; smallest, Z &rarr; A</p>
+          </div>
+          <div class="split-visual">
+            <div class="bar-demo" aria-label="Unsorted to sorted bar animation">
+            <div class="demo-bar" style="--h: 80%; --delay: 0s;"></div>
+            <div class="demo-bar" style="--h: 40%; --delay: 0.2s;"></div>
+            <div class="demo-bar" style="--h: 100%; --delay: 0.4s;"></div>
+            <div class="demo-bar" style="--h: 20%; --delay: 0.6s;"></div>
+            <div class="demo-bar" style="--h: 60%; --delay: 0.8s;"></div>
+          </div>
+          </div>
+        </div>
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 2 / 18</div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ─── Slide 3: Why Sorting Matters ─── -->
+    <section class="slide" data-slide=\"3\" aria-label="Slide 3">
+      <div class="slide-canvas align-top">
+
       <h2>Why sorting matters</h2>
       <div class="card-grid-2x3">
         <div class="app-card"><span class="card-title">Schools</span><span class="card-detail">Arrange student names or grades for easier record management</span></div>
@@ -48,8 +76,18 @@
         <div class="app-card"><span class="card-title">Databases</span><span class="card-detail">Organize stored data to make searching quicker</span></div>
         <div class="app-card"><span class="card-title">Finance</span><span class="card-detail">Sort expenses or sales records to track information better</span></div>
       </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 3 / 18</div>
+        </footer>
+      </div>
     </section>
-    <section class="slide" data-slide="4" aria-label="Slide 4">
+
+    <!-- ─── Slide 4: Properties & Classification ─── -->
+    <section class="slide" data-slide=\"4\" aria-label="Slide 4">
+      <div class="slide-canvas align-top">
+
       <h2>Properties &amp; Classification</h2>
       <div class="slide-split">
         <div class="split-left">
@@ -78,29 +116,51 @@
           </table>
         </div>
       </div>
-    </section>
-    <section class="slide" data-slide="5" aria-label="Slide 5">
-      <h2>Bubble Sort</h2>
-      <p class="algo-aka">Also known as <em>sinking sort</em></p>
-      <p>Repeatedly compares adjacent elements and swaps them if they are in the wrong order. Smaller elements "bubble" to the top through repeated passes.</p>
-      <div class="property-badges">
-        <span class="badge badge-yes">Stable ✓</span>
-        <span class="badge badge-yes">In-place ✓</span>
-        <span class="badge badge-yes">Comparison-based ✓</span>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 4 / 18</div>
+        </footer>
       </div>
-      <p class="algo-note">Mainly used for learning — not efficient for large datasets.</p>
     </section>
-    <section class="slide" data-slide="6" aria-label="Slide 6">
-      <div class="slide-split">
-        <div class="split-left">
-          <h2>How Bubble Sort Works</h2>
-          <ol class="step-list">
+
+    <!-- ─── Slide 5: Bubble Sort Intro ─── -->
+    <section class="slide slide-centered" data-slide=\"5\" aria-label="Slide 5">
+      <div class="slide-canvas">
+
+      <div class="algo-intro-card">
+        <h2>Bubble Sort</h2>
+        <p class="algo-aka">Also known as <em>sinking sort</em></p>
+        <p>Repeatedly compares adjacent elements and swaps them if they are in the wrong order. Smaller elements "bubble" to the top through repeated passes.</p>
+        <div class="property-badges">
+          <span class="badge badge-yes">Stable ✓</span>
+          <span class="badge badge-yes">In-place ✓</span>
+          <span class="badge badge-yes">Comparison-based ✓</span>
+        </div>
+        <p class="algo-note">Mainly used for learning — not efficient for large datasets.</p>
+      </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 5 / 18</div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ─── Slide 6: How Bubble Sort Works ─── -->
+    <section class="slide" data-slide=\"6\" aria-label="Slide 6">
+      <div class="slide-canvas align-top">
+        <h2>How Bubble Sort Works</h2>
+        <div class="slide-split weighted">
+          <div class="split-left">
+            <h3>Algorithm Steps</h3>
+            <ol class="step-list">
             <li>Compare adjacent elements</li>
             <li>Swap if in the wrong order</li>
             <li>Continue to the end of the array</li>
             <li>Repeat until no swaps occur</li>
           </ol>
-          <table class="complexity-table">
+            <table class="complexity-table compact">
             <thead><tr><th>Case</th><th>Time</th></tr></thead>
             <tbody>
               <tr><td>Best</td><td class="cell-good">O(n)</td></tr>
@@ -108,12 +168,12 @@
               <tr><td>Worst</td><td>O(n²)</td></tr>
               <tr><td>Space</td><td>O(1)</td></tr>
             </tbody>
+            <tfoot><tr><td colspan="2" class="table-footer">Stable: Yes</td></tr></tfoot>
           </table>
-          <p class="stable-note">Stable: Yes</p>
-        </div>
-        <div class="split-right">
-          <h3>Pseudocode</h3>
-          <pre class="code-trace"><code>for i = 0 to n-1
+          </div>
+          <div class="split-right">
+            <h3>Pseudocode</h3>
+            <pre class="code-trace"><code>for i = 0 to n-1
   swapped = false
   for j = 0 to n-i-2
     if arr[j] &gt; arr[j+1]
@@ -121,37 +181,69 @@
       swapped = true
   if swapped == false
     break</code></pre>
+          </div>
         </div>
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 6 / 18</div>
+        </footer>
       </div>
     </section>
-    <section class="slide sim-handoff" data-slide="7" aria-label="Slide 7">
+
+    <!-- ─── Slide 7: Bubble Sort Live Sim ─── -->
+    <section class="slide sim-handoff" data-slide=\"7\" aria-label="Slide 7">
+      <div class="slide-canvas">
+
+      <span class="sim-icon">▶</span>
       <span class="eyebrow">Live Simulation</span>
       <h2>Bubble Sort — See It in Action</h2>
       <p>Watch adjacent comparisons and swaps animate in real time. Observe how larger values rise to the right with each pass.</p>
-      <button class="button-link" onclick="launchSim('bubble.html')">Launch Bubble Sort</button>
+      <button class="button-link" onclick="openSim('bubble.html', 'Bubble Sort')">Launch Bubble Sort</button>
       <a class="skip-link" href="#" onclick="event.preventDefault(); goTo(7)">Skip and continue →</a>
-    </section>
-    <section class="slide" data-slide="8" aria-label="Slide 8">
-      <h2>Selection Sort</h2>
-      <p>Divides the list into sorted (left) and unsorted (right) portions. Repeatedly finds the minimum of the unsorted portion and swaps it into position — one swap per pass.</p>
-      <div class="property-badges">
-        <span class="badge badge-no">Stable ✗</span>
-        <span class="badge badge-yes">In-place ✓</span>
-        <span class="badge badge-yes">Comparison-based ✓</span>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 7 / 18</div>
+        </footer>
       </div>
-      <p class="algo-note">Not stable; usually chosen when swap count matters more than comparison count.</p>
     </section>
-    <section class="slide" data-slide="9" aria-label="Slide 9">
-      <div class="slide-split">
-        <div class="split-left">
-          <h2>How Selection Sort Works</h2>
-          <ol class="step-list">
+
+    <!-- ─── Slide 8: Selection Sort Intro ─── -->
+    <section class="slide slide-centered" data-slide=\"8\" aria-label="Slide 8">
+      <div class="slide-canvas">
+
+      <div class="algo-intro-card">
+        <h2>Selection Sort</h2>
+        <p>Divides the list into sorted (left) and unsorted (right) portions. Repeatedly finds the minimum of the unsorted portion and swaps it into position — one swap per pass.</p>
+        <div class="property-badges">
+          <span class="badge badge-no">Stable ✗</span>
+          <span class="badge badge-yes">In-place ✓</span>
+          <span class="badge badge-yes">Comparison-based ✓</span>
+        </div>
+        <p class="algo-note">Not stable; usually chosen when swap count matters more than comparison count.</p>
+      </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 8 / 18</div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ─── Slide 9: How Selection Sort Works ─── -->
+    <section class="slide" data-slide=\"9\" aria-label="Slide 9">
+      <div class="slide-canvas align-top">
+        <h2>How Selection Sort Works</h2>
+        <div class="slide-split weighted">
+          <div class="split-left">
+            <h3>Algorithm Steps</h3>
+            <ol class="step-list">
             <li>Find the smallest element in the unsorted portion</li>
             <li>Swap it with the first unsorted element</li>
             <li>Move the sorted/unsorted boundary forward</li>
             <li>Repeat until all elements are sorted</li>
           </ol>
-          <table class="complexity-table">
+            <table class="complexity-table compact">
             <thead><tr><th>Case</th><th>Time</th></tr></thead>
             <tbody>
               <tr><td>Best</td><td class="cell-warn">O(n²)</td></tr>
@@ -159,79 +251,88 @@
               <tr><td>Worst</td><td>O(n²)</td></tr>
               <tr><td>Space</td><td>O(1)</td></tr>
             </tbody>
+            <tfoot><tr><td colspan="2" class="table-footer">Stable: No · Always performs a full scan</td></tr></tfoot>
           </table>
-          <p class="stable-note">Stable: No</p>
-          <p class="slide-note">Selection Sort does not improve in the best case — it always performs a full scan.</p>
-        </div>
-        <div class="split-right">
-          <h3>Pseudocode</h3>
-          <pre class="code-trace"><code>for i = 0 to n-1
+          </div>
+          <div class="split-right">
+            <h3>Pseudocode</h3>
+            <pre class="code-trace"><code>for i = 0 to n-1
   minIndex = i
   for j = i+1 to n-1
     if arr[j] &lt; arr[minIndex]
       minIndex = j
   swap(arr[i], arr[minIndex])</code></pre>
+          </div>
         </div>
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 9 / 18</div>
+        </footer>
       </div>
     </section>
-    <section class="slide sim-handoff" data-slide="10" aria-label="Slide 10">
+
+    <!-- ─── Slide 10: Selection Sort Live Sim ─── -->
+    <section class="slide sim-handoff" data-slide=\"10\" aria-label="Slide 10">
+      <div class="slide-canvas">
+
+      <span class="sim-icon">▶</span>
       <span class="eyebrow">Live Simulation</span>
       <h2>Selection Sort — See It in Action</h2>
       <p>Watch the algorithm scan the unsorted portion for the minimum element and place it in position.</p>
-      <button class="button-link" onclick="launchSim('selection.html')">Launch Selection Sort</button>
+      <button class="button-link" onclick="openSim('selection.html', 'Selection Sort')">Launch Selection Sort</button>
       <a class="skip-link" href="#" onclick="event.preventDefault(); goTo(10)">Skip and continue →</a>
-    </section>
-    <section class="slide" data-slide="11" aria-label="Slide 11">
-      <h2>Insertion Sort</h2>
-      <p>Builds the sorted list one element at a time — like arranging playing cards in your hand. Picks the next element, shifts larger sorted elements right, then places it in the correct position.</p>
-      <div class="property-badges">
-        <span class="badge badge-yes">Stable ✓</span>
-        <span class="badge badge-yes">In-place ✓</span>
-        <span class="badge badge-yes">Comparison-based ✓</span>
-      </div>
-      <p class="algo-note">Excellent for small or nearly sorted inputs.</p>
-    </section>
-    <section class="slide" data-slide="12" aria-label="Slide 12">
-      <div class="slide-split">
-        <div class="split-left">
-          <h2>How Insertion Sort Works</h2>
-          <ol class="step-list">
-            <li>Take the next element from the unsorted portion</li>
-            <li>Compare it with elements in the sorted portion</li>
-            <li>Shift larger elements one position to the right</li>
-            <li>Insert the element into the correct position</li>
-          </ol>
-          <table class="complexity-table">
-            <thead><tr><th>Case</th><th>Time</th></tr></thead>
-            <tbody>
-              <tr><td>Best</td><td class="cell-good">O(n)</td></tr>
-              <tr><td>Average</td><td>O(n²)</td></tr>
-              <tr><td>Worst</td><td>O(n²)</td></tr>
-              <tr><td>Space</td><td>O(1)</td></tr>
-            </tbody>
-          </table>
-          <p class="stable-note">Stable: Yes</p>
-        </div>
-        <div class="split-right">
-          <h3>Pseudocode</h3>
-          <pre class="code-trace"><code>for i = 1 to n-1
-  key = arr[i]
-  j = i - 1
-  while j &gt;= 0 and arr[j] &gt; key
-    arr[j+1] = arr[j]
-    j = j - 1
-  arr[j+1] = key</code></pre>
-        </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 10 / 18</div>
+        </footer>
       </div>
     </section>
-    <section class="slide sim-handoff" data-slide="13" aria-label="Slide 13">
+
+    <!-- ─── Slide 11: Insertion Sort Intro ─── -->
+    <section class="slide slide-centered" data-slide=\"11\" aria-label="Slide 11">
+      <div class="slide-canvas">
+
+      <div class="algo-intro-card">
+        <h2>Insertion Sort</h2>
+        <p>Builds the sorted list one element at a time — like arranging playing cards in your hand. Picks the next element, shifts larger sorted elements right, then places it in the correct position.</p>
+        <div class="property-badges">
+          <span class="badge badge-yes">Stable ✓</span>
+          <span class="badge badge-yes">In-place ✓</span>
+          <span class="badge badge-yes">Comparison-based ✓</span>
+        </div>
+        <p class="algo-note">Excellent for small or nearly sorted inputs.</p>
+      </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 11 / 18</div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ─── Slide 12: Insertion Sort Live Sim ─── -->
+    <section class="slide sim-handoff" data-slide=\"12\" aria-label="Slide 12">
+      <div class="slide-canvas">
+
+      <span class="sim-icon">▶</span>
       <span class="eyebrow">Live Simulation</span>
       <h2>Insertion Sort — See It in Action</h2>
       <p>Follow the key element as it shifts leftward into the growing sorted region.</p>
-      <button class="button-link" onclick="launchSim('insertion.html')">Launch Insertion Sort</button>
-      <a class="skip-link" href="#" onclick="event.preventDefault(); goTo(13)">Skip and continue →</a>
+      <button class="button-link" onclick="openSim('insertion.html', 'Insertion Sort')">Launch Insertion Sort</button>
+      <a class="skip-link" href="#" onclick="event.preventDefault(); goTo(12)">Skip and continue →</a>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 12 / 18</div>
+        </footer>
+      </div>
     </section>
-    <section class="slide" data-slide="14" aria-label="Slide 14">
+
+    <!-- ─── Slide 13: Comparative Analysis ─── -->
+    <section class="slide" data-slide=\"13\" aria-label="Slide 13">
+      <div class="slide-canvas align-top">
+
       <h2>Comparative Analysis</h2>
       <table class="complexity-table">
         <thead>
@@ -262,15 +363,25 @@
         </tbody>
       </table>
       <p class="slide-note">All three use O(1) space. Bubble and Insertion Sort reach O(n) best case; Selection Sort always runs at O(n²).</p>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 13 / 18</div>
+        </footer>
+      </div>
     </section>
-    <section class="slide" data-slide="15" aria-label="Slide 15">
+
+    <!-- ─── Slide 14: Stability & In-Place ─── -->
+    <section class="slide" data-slide=\"14\" aria-label="Slide 14">
+      <div class="slide-canvas align-top">
+
       <h2>Stability &amp; In-Place</h2>
       <div class="slide-split">
         <div class="split-left">
           <h3>Stability</h3>
           <p>A stable sort preserves the original relative order of elements with equal keys.</p>
           <p class="example-note">Example: students sorted by grade — a stable sort keeps same-grade students in their original name order.</p>
-          <table class="complexity-table">
+          <table class="complexity-table compact">
             <thead><tr><th>Algorithm</th><th>Stable</th></tr></thead>
             <tbody>
               <tr><td>Bubble Sort</td><td class="cell-good">✓ Yes</td></tr>
@@ -286,21 +397,43 @@
           <p class="example-note">Contrast: Merge Sort is <strong>not</strong> in-place — it requires O(n) additional space.</p>
         </div>
       </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 14 / 18</div>
+        </footer>
+      </div>
     </section>
-    <section class="slide sim-handoff" data-slide="16" aria-label="Slide 16">
+
+    <!-- ─── Slide 15: Compare All Three ─── -->
+    <section class="slide sim-handoff" data-slide=\"15\" aria-label="Slide 15">
+      <div class="slide-canvas">
+
+      <span class="sim-icon">⚡</span>
       <span class="eyebrow">Capstone</span>
       <h2>Compare All Three — Live Race</h2>
       <p>See all three algorithms run simultaneously on the same starting array. Pause anywhere to inspect how each strategy spends its comparisons and swaps.</p>
-      <button class="button-link" onclick="launchSim('compare.html')">Launch Compare All</button>
-      <a class="skip-link" href="#" onclick="event.preventDefault(); goTo(16)">Skip and continue →</a>
+      <button class="button-link" onclick="openSim('compare.html', 'Compare All')">Launch Compare All</button>
+      <a class="skip-link" href="#" onclick="event.preventDefault(); goTo(15)">Skip and continue →</a>
       <p class="slide-note">The best way to see why the algorithms feel different even when their Big O looks the same.</p>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 15 / 18</div>
+        </footer>
+      </div>
     </section>
-    <section class="slide" data-slide="17" aria-label="Slide 17">
+
+    <!-- ─── Slide 16: Summary ─── -->
+    <section class="slide" data-slide=\"16\" aria-label="Slide 16">
+      <div class="slide-canvas align-top">
+
       <h2>Summary</h2>
       <div class="summary-cards">
         <div class="summary-card">
           <h3>Bubble Sort</h3>
           <p class="card-idea">Swap adjacent pairs until sorted</p>
+          <p class="card-complexity">Average: O(n²)</p>
           <p class="card-best">Best for: learning; nearly sorted small data</p>
           <div class="property-badges">
             <span class="badge badge-yes">Stable</span>
@@ -310,6 +443,7 @@
         <div class="summary-card">
           <h3>Selection Sort</h3>
           <p class="card-idea">Select minimum and place it in position</p>
+          <p class="card-complexity">Average: O(n²)</p>
           <p class="card-best">Best for: when swaps must be minimized</p>
           <div class="property-badges">
             <span class="badge badge-no">Not Stable</span>
@@ -319,6 +453,7 @@
         <div class="summary-card">
           <h3>Insertion Sort</h3>
           <p class="card-idea">Insert each element into sorted portion</p>
+          <p class="card-complexity">Average: O(n²)</p>
           <p class="card-best">Best for: small or nearly sorted data; real-time</p>
           <div class="property-badges">
             <span class="badge badge-yes">Stable</span>
@@ -326,8 +461,18 @@
           </div>
         </div>
       </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 16 / 18</div>
+        </footer>
+      </div>
     </section>
-    <section class="slide" data-slide="18" aria-label="Slide 18">
+
+    <!-- ─── Slide 17: Key Terms & Exercises ─── -->
+    <section class="slide" data-slide=\"17\" aria-label="Slide 17">
+      <div class="slide-canvas align-top">
+
       <div class="slide-split">
         <div class="split-left">
           <h2>Key Terms</h2>
@@ -340,22 +485,32 @@
         </div>
         <div class="split-right">
           <h2>Practice Exercises</h2>
-          <div class="exercise-box">
+          <div class="exercise-box" data-exercise="1">
             <p><strong>Exercise 1 — Selection Sort</strong></p>
             <p>Sort <code>[7, 12, 9, 11, 3]</code>. Show the result of each pass.</p>
           </div>
-          <div class="exercise-box">
+          <div class="exercise-box" data-exercise="2">
             <p><strong>Exercise 2 — Bubble Sort</strong></p>
             <p>Sort <code>[7, 14, 11, 8, 9]</code>. Show the result of each pass.</p>
           </div>
-          <div class="exercise-box">
+          <div class="exercise-box" data-exercise="3">
             <p><strong>Exercise 3 — Insertion Sort</strong></p>
             <p>Sort <code>[10, 4, 7, 2, 9]</code>. Show the result of each pass.</p>
           </div>
         </div>
       </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 17 / 18</div>
+        </footer>
+      </div>
     </section>
-    <section class="slide" data-slide="19" aria-label="Slide 19">
+
+    <!-- ─── Slide 18: References ─── -->
+    <section class="slide" data-slide=\"18\" aria-label="Slide 18">
+      <div class="slide-canvas align-top">
+
       <h2>References</h2>
       <div class="slide-split refs-split">
         <div class="split-left">
@@ -385,11 +540,38 @@
         <a class="button-link ghost" href="index.html">← Back to Sort Lab</a>
         <p class="module-complete">Module III — Complete</p>
       </div>
+    
+        <footer class="slide-footer">
+          <div class="footer-left"><span>Module III: Sorting Algorithms</span></div>
+          <div class="footer-right">Slide 18 / 18</div>
+        </footer>
+      </div>
     </section>
   </main>
-  <nav class="nav-controls">
+
+  <!-- ─── Simulation Iframe Overlay ─── -->
+  <div class="sim-overlay" id="simOverlay" hidden>
+    <div class="sim-overlay-header">
+      <span class="sim-overlay-title" id="simOverlayTitle">Simulation</span>
+      <button class="sim-overlay-close" id="simOverlayClose" type="button" aria-label="Close simulation">✕</button>
+    </div>
+    <iframe class="sim-overlay-frame" id="simFrame" title="Live sorting simulation"></iframe>
+  </div>
+
+  <!-- ─── Nav Controls ─── -->
+  <nav class="nav-controls" id="navControls">
+    <a class="nav-exit" href="index.html" title="Exit presentation">✕</a>
+    <button class="nav-arrow" id="navPrev" type="button" aria-label="Previous slide">‹</button>
     <span id="slide-counter"></span>
+    <button class="nav-arrow" id="navNext" type="button" aria-label="Next slide">›</button>
+    <select class="nav-theme" id="navTheme" aria-label="Theme">
+      <option value="dark">Dark</option>
+      <option value="light">Light</option>
+      <option value="ocean">Ocean</option>
+      <option value="forest">Forest</option>
+    </select>
   </nav>
+
   <script src="js/updater.js"></script>
   <script src="js/shell.js"></script>
   <script src="js/presentation.js"></script>

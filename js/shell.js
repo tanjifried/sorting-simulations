@@ -1,21 +1,26 @@
 (function () {
-  const params = new URLSearchParams(location.search);
+  var params = new URLSearchParams(location.search);
   if (params.get('from') === 'presentation') {
-    let returnSlide = 0;
+    var returnSlide = 0;
     try {
-      const stored = sessionStorage.getItem('returnSlide');
-      const parsed = parseInt(stored || '0', 10);
+      var stored = sessionStorage.getItem('returnSlide');
+      var parsed = parseInt(stored || '0', 10);
       returnSlide = !isNaN(parsed) && parsed >= 0 ? parsed : 0;
     } catch (error) {
       returnSlide = 0;
     }
-    const btn = document.createElement('a');
+    var btn = document.createElement('a');
     btn.href = 'presentation.html#slide-' + returnSlide;
-    btn.className = 'button-link ghost';
-    btn.textContent = '\u2190 Back to Presentation';
-    btn.style.cssText = 'position:fixed;top:12px;left:12px;z-index:200;font-size:0.85rem;';
+    btn.className = 'topnav-link pres-return-link';
+    btn.textContent = '\u2190 Presentation';
     document.addEventListener('DOMContentLoaded', function () {
-      document.body.prepend(btn);
+      var nav = document.querySelector('.topnav');
+      if (nav) {
+        /* Insert as the first child of the topnav so it sits on the left */
+        nav.insertBefore(btn, nav.firstChild);
+      } else {
+        document.body.prepend(btn);
+      }
     });
   }
 })();
@@ -729,79 +734,86 @@
     var file = currentFile();
     shellState.currentPage = page;
 
-    var nav = document.createElement('nav');
-    nav.className = 'topnav';
-    shellState.nav = nav;
+    /* Skip topnav on the presentation page — it has its own nav-controls */
+    var isPresentation = !!document.querySelector('.presentation');
+    if (!isPresentation) {
+      var nav = document.createElement('nav');
+      nav.className = 'topnav';
+      shellState.nav = nav;
 
-    var brand = document.createElement('div');
-    brand.className = 'topnav-brand-wrap';
+      var brand = document.createElement('div');
+      brand.className = 'topnav-brand-wrap';
 
-    var brandName = document.createElement('span');
-    brandName.className = 'topnav-brand';
-    brandName.textContent = 'Sort Lab';
+      var brandName = document.createElement('span');
+      brandName.className = 'topnav-brand';
+      brandName.textContent = 'Sort Lab';
 
-    var brandVersion = document.createElement('span');
-    brandVersion.className = 'topnav-version';
-    brandVersion.textContent = 'v1.7.0';
+      var brandVersion = document.createElement('span');
+      brandVersion.className = 'topnav-version';
+      brandVersion.textContent = 'v1.7.0';
 
-    brand.appendChild(brandName);
-    brand.appendChild(brandVersion);
-    nav.appendChild(brand);
+      brand.appendChild(brandName);
+      brand.appendChild(brandVersion);
+      nav.appendChild(brand);
 
-    var center = document.createElement('div');
-    center.className = 'topnav-center';
+      var center = document.createElement('div');
+      center.className = 'topnav-center';
 
-    var current = document.createElement('span');
-    current.className = 'topnav-current';
-    current.textContent = page.label;
-    center.appendChild(current);
+      var current = document.createElement('span');
+      current.className = 'topnav-current';
+      current.textContent = page.label;
+      center.appendChild(current);
 
-    var links = document.createElement('div');
-    links.className = 'topnav-links';
-    links.appendChild(createLink(PAGES[1], file));
-    links.appendChild(createLink(PAGES[2], file));
-    links.appendChild(createLink(PAGES[3], file));
-    links.appendChild(createLink(PAGES[4], file));
-    center.appendChild(links);
-    nav.appendChild(center);
+      var links = document.createElement('div');
+      links.className = 'topnav-links';
+      links.appendChild(createLink(PAGES[1], file));
+      links.appendChild(createLink(PAGES[2], file));
+      links.appendChild(createLink(PAGES[3], file));
+      links.appendChild(createLink(PAGES[4], file));
+      center.appendChild(links);
+      nav.appendChild(center);
 
-    var right = document.createElement('div');
-    right.className = 'topnav-right';
+      var right = document.createElement('div');
+      right.className = 'topnav-right';
 
-    var theme = document.createElement('select');
-    theme.className = 'theme-select';
-    theme.setAttribute('aria-label', 'Theme');
-    ['dark', 'light', 'ocean', 'forest'].forEach(function (name) {
-      var option = document.createElement('option');
-      option.value = name;
-      option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
-      if (document.body.getAttribute('data-theme') === name) {
-        option.selected = true;
-      }
-      theme.appendChild(option);
-    });
-    theme.addEventListener('change', function () {
-      document.body.setAttribute('data-theme', theme.value);
-      localStorage.setItem('sort-lab-theme', theme.value);
-    });
+      var theme = document.createElement('select');
+      theme.className = 'theme-select';
+      theme.setAttribute('aria-label', 'Theme');
+      ['dark', 'light', 'ocean', 'forest'].forEach(function (name) {
+        var option = document.createElement('option');
+        option.value = name;
+        option.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+        if (document.body.getAttribute('data-theme') === name) {
+          option.selected = true;
+        }
+        theme.appendChild(option);
+      });
+      theme.addEventListener('change', function () {
+        document.body.setAttribute('data-theme', theme.value);
+        localStorage.setItem('sort-lab-theme', theme.value);
+      });
 
-    var helpBtn = document.createElement('button');
-    helpBtn.className = 'pill-btn help-btn';
-    helpBtn.type = 'button';
-    helpBtn.setAttribute('aria-label', 'Keyboard shortcuts');
-    helpBtn.textContent = '?';
-    helpBtn.addEventListener('click', function () {
-      toggleShortcutOverlay();
-    });
+      var helpBtn = document.createElement('button');
+      helpBtn.className = 'pill-btn help-btn';
+      helpBtn.type = 'button';
+      helpBtn.setAttribute('aria-label', 'Keyboard shortcuts');
+      helpBtn.textContent = '?';
+      helpBtn.addEventListener('click', function () {
+        toggleShortcutOverlay();
+      });
 
-    right.appendChild(theme);
-    right.appendChild(helpBtn);
-    nav.appendChild(right);
+      right.appendChild(theme);
+      right.appendChild(helpBtn);
+      nav.appendChild(right);
 
-    document.body.insertBefore(nav, document.body.firstChild);
+      document.body.insertBefore(nav, document.body.firstChild);
+    }
+
     syncFullscreenControls();
     buildShortcutOverlay();
-    buildFloatingPanel(page);
+    if (!isPresentation) {
+      buildFloatingPanel(page);
+    }
   }
 
   function wireCollapse(buttonId, panelId, className, collapsedText, expandedText) {

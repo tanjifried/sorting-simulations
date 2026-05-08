@@ -1913,3 +1913,24 @@ body.tiles-snap-gap .tile-card.tile-header-hidden .tile-body {
   box-sizing: border-box;
   overflow-y: auto;
 }
+
+/* ═══════════════════════════════════════════════════════
+   BACK TO PRESENTATION LINK
+   Styled link inserted into topnav when coming from
+   the presentation. Shows accent-tinted highlight.
+   ═══════════════════════════════════════════════════════ */
+
+.pres-return-link {
+  background: color-mix(in srgb, var(--accent) 15%, var(--surface-2)) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.8rem !important;
+  flex-shrink: 0;
+}
+
+.pres-return-link:hover {
+  background: var(--accent) !important;
+  color: var(--surface) !important;
+}
+
